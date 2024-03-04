@@ -1,4 +1,4 @@
-# Hen
+# Hen 🐔
 Automated GitHub profile review.
 
 ## Name

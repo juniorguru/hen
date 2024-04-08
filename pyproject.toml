@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "jg.hen"
+version = "0.0"
+description = "Automated GitHub profile review"
+authors = ["Honza Javorek <mail@honzajavorek.cz>"]
+license = "AGPL-3.0-only"
+readme = "README.md"
+homepage = "https://junior.guru/"
+repository = "https://github.com/juniorguru/hen"
+packages = [{ include = "jg" }]
+
+[tool.poetry.scripts]
+hen = "jg.hen.cli:main"
+
+[tool.poetry.dependencies]
+python = "3.11.*"
+click = "8.1.7"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "8.1.1"
+pytest-ruff = "0.3.1"
+ruff = "0.3.1"
+cookiecutter = "2.6.0"
+
+[tool.pytest.ini_options]
+python_files = "test_*.py"
+testpaths = "tests"
+addopts = "--import-mode=importlib --ff --ruff --ruff-format"
+
+[tool.ruff]
+target-version = "py311"
+extend-exclude = ["rule_template"]
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+lines-after-imports = 2
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

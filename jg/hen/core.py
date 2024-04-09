@@ -17,7 +17,8 @@ logger = logging.getLogger("jg.hen.core")
 
 
 on_profile = blinker.Signal()
-on_avatar = blinker.Signal()
+on_avatar_response = blinker.Signal()
+on_social_accounts = blinker.Signal()
 
 
 class ResultType(StrEnum):
@@ -31,12 +32,6 @@ class Result:
     type: ResultType
     message: str
     docs_url: str
-
-
-@dataclass
-class Context:
-    profile_url: str
-    username: str
 
 
 @dataclass
@@ -77,23 +72,28 @@ async def check_profile_url(
     results = []
     try:
         username = parse_username(profile_url)
-        context = Context(profile_url=profile_url, username=username)
 
         import jg.hen.rules  # noqa
 
         response = await github.rest.users.async_get_by_username(username)
         user = response.parsed_data
-        results.extend(collect_results(await on_profile.send_async(context, user=user)))
+        results.extend(await send(on_profile, user=user))
 
         response = await http.get(user.avatar_url)
-        results.extend(
-            collect_results(await on_avatar.send_async(context, avatar=response))
-        )
+        results.extend(await send(on_avatar_response, avatar_response=response))
+
+        response = await github.rest.users.async_list_social_accounts_for_user(username)
+        social_accounts = response.parsed_data
+        results.extend(await send(on_social_accounts, social_accounts=social_accounts))
     except Exception as error:
         if raise_on_error:
             raise
         return Summary(status="error", results=results, error=error)
     return Summary(status="ok", results=results)
+
+
+async def send(signal: blinker.Signal, **kwargs) -> list[Result]:
+    return collect_results(await signal.send_async(None, **kwargs))
 
 
 def collect_results(
@@ -105,7 +105,7 @@ def collect_results(
 def rule(signal: blinker.Signal, docs_url: str) -> Callable:
     def decorator(fn: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
         @wraps(fn)
-        async def wrapper(*args, **kwargs) -> Result | None:
+        async def wrapper(sender: None, *args, **kwargs) -> Result | None:
             try:
                 result = await fn(*args, **kwargs)
                 if result is None:

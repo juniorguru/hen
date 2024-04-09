@@ -1,28 +1,32 @@
 from io import BytesIO
 
 import httpx
-from githubkit.rest import PublicUser
+from githubkit.rest import PublicUser, SocialAccount
 from PIL import Image
 
-from jg.hen.core import Context, ResultType, on_avatar, on_profile, rule
+from jg.hen.core import (
+    ResultType,
+    on_avatar_response,
+    on_profile,
+    on_social_accounts,
+    rule,
+)
 
 
 IDENTICON_GREY = (240, 240, 240)
 
 
 @rule(
-    on_avatar,
+    on_avatar_response,
     "https://junior.guru/handbook/github-profile/#nastav-si-vlastni-obrazek",
 )
-async def has_avatar(
-    context: Context, avatar: httpx.Response
-) -> tuple[ResultType, str]:
+async def has_avatar(avatar_response: httpx.Response) -> tuple[ResultType, str]:
     try:
-        avatar.raise_for_status()
+        avatar_response.raise_for_status()
     except httpx.HTTPStatusError as e:
         raise RuntimeError(f"Failed to fetch avatar: {e}") from e
 
-    with Image.open(BytesIO(avatar.content)) as image:
+    with Image.open(BytesIO(avatar_response.content)) as image:
         colors = image.getcolors()
 
     if (
@@ -38,7 +42,7 @@ async def has_avatar(
     on_profile,
     "https://junior.guru/handbook/github-profile/#vypln-si-zakladni-udaje",
 )
-async def has_name(context: Context, user: PublicUser) -> tuple[ResultType, str]:
+async def has_name(user: PublicUser) -> tuple[ResultType, str]:
     if user.name:
         return ResultType.DONE, f"Jméno máš vyplněné: {user.name}"
     return ResultType.RECOMMENDATION, "Doplň si jméno."
@@ -48,7 +52,7 @@ async def has_name(context: Context, user: PublicUser) -> tuple[ResultType, str]
     on_profile,
     "https://junior.guru/handbook/github-profile/#vypln-si-zakladni-udaje",
 )
-async def has_bio(context: Context, user: PublicUser) -> tuple[ResultType, str]:
+async def has_bio(user: PublicUser) -> tuple[ResultType, str]:
     if user.bio:
         return ResultType.DONE, "Bio máš vyplněné"
     return ResultType.RECOMMENDATION, "Doplň si bio."
@@ -58,7 +62,18 @@ async def has_bio(context: Context, user: PublicUser) -> tuple[ResultType, str]:
     on_profile,
     "https://junior.guru/handbook/github-profile/#vypln-si-zakladni-udaje",
 )
-async def has_location(context: Context, user: PublicUser) -> tuple[ResultType, str]:
+async def has_location(user: PublicUser) -> tuple[ResultType, str]:
     if user.location:
         return (ResultType.DONE, f"Lokaci máš vyplněnou: {user.location}")
     return ResultType.RECOMMENDATION, "Doplň si lokaci."
+
+
+@rule(
+    on_social_accounts,
+    "https://junior.guru/handbook/github-profile/#zviditelni-sve-dalsi-profily",
+)
+async def has_linkedin(social_accounts: list[SocialAccount]) -> tuple[ResultType, str]:
+    for account in social_accounts:
+        if account.provider == "linkedin":
+            return ResultType.DONE, f"LinkedIn máš vyplněný: {account.url}"
+    return ResultType.RECOMMENDATION, "Doplň si odkaz na svůj LinkedIn profil."

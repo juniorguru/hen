@@ -7,6 +7,7 @@ from PIL import Image
 from jg.hen.core import (
     ResultType,
     on_avatar_response,
+    on_pinned_repos,
     on_profile,
     on_social_accounts,
     rule,
@@ -77,3 +78,20 @@ async def has_linkedin(social_accounts: list[SocialAccount]) -> tuple[ResultType
         if account.provider == "linkedin":
             return ResultType.DONE, f"LinkedIn máš vyplněný: {account.url}"
     return ResultType.RECOMMENDATION, "Doplň si odkaz na svůj LinkedIn profil."
+
+
+@rule(
+    on_pinned_repos,
+    "https://junior.guru/handbook/github-profile/#vypichni-to-cim-se-chlubis",
+)
+async def has_some_pinned_repos(pinned_repos: list[str]) -> tuple[ResultType, str]:
+    pinned_repos_count = len(pinned_repos)
+    if pinned_repos_count:
+        return (
+            ResultType.DONE,
+            f"Máš nějaké připnuté repozitáře (celkem {pinned_repos_count})",
+        )
+    return (
+        ResultType.RECOMMENDATION,
+        "Připni si repozitáře, kterými se chceš chlubit.",
+    )

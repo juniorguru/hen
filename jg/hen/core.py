@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass
 from enum import StrEnum, auto
 from functools import wraps
+from pathlib import Path
 from typing import Callable, Coroutine, Literal
 from urllib.parse import urlparse
 
@@ -12,6 +13,8 @@ from githubkit import GitHub
 
 USER_AGENT = "JuniorGuruBot (+https://junior.guru)"
 
+PINNED_REPOS_GQL = Path(__file__).with_name("pinned_repos.gql").read_text()
+
 
 logger = logging.getLogger("jg.hen.core")
 
@@ -19,6 +22,8 @@ logger = logging.getLogger("jg.hen.core")
 on_profile = blinker.Signal()
 on_avatar_response = blinker.Signal()
 on_social_accounts = blinker.Signal()
+on_pinned_repos = blinker.Signal()
+on_pinned_repo = blinker.Signal()
 
 
 class ResultType(StrEnum):
@@ -87,8 +92,9 @@ async def check_profile_url(
         social_accounts = response.parsed_data
         results.extend(await send(on_social_accounts, social_accounts=social_accounts))
 
-        # https://stackoverflow.com/a/60123976/325365
-        # https://github.com/yanyongyu/githubkit?tab=readme-ov-file#calling-graphql-api
+        data = await github.async_graphql(PINNED_REPOS_GQL, {"login": username})
+        pinned_repos = data["user"]["pinnedItems"]["nodes"]
+        results.extend(await send(on_pinned_repos, pinned_repos=pinned_repos))
     except Exception as error:
         if raise_on_error:
             raise

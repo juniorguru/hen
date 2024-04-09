@@ -1,0 +1,16 @@
+query($login: String!) {
+    user(login: $login) {
+        pinnedItems(first: 6, types: REPOSITORY) {
+            nodes {
+                ... on Repository {
+                    name
+                    nameWithOwner
+                    description
+                    homepageUrl
+                    pushedAt
+                    url
+                }
+            }
+        }
+    }
+}

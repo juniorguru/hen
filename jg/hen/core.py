@@ -44,7 +44,8 @@ class Summary:
 def with_github(fn: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
     @wraps(fn)
     async def wrapper(*args, **kwargs) -> Coroutine:
-        async with GitHub(user_agent=USER_AGENT) as github:
+        github_api_key = kwargs.pop("github_api_key", None)
+        async with GitHub(github_api_key, user_agent=USER_AGENT) as github:
             return await fn(*args, github=github, **kwargs)
 
     return wrapper
@@ -85,6 +86,9 @@ async def check_profile_url(
         response = await github.rest.users.async_list_social_accounts_for_user(username)
         social_accounts = response.parsed_data
         results.extend(await send(on_social_accounts, social_accounts=social_accounts))
+
+        # https://stackoverflow.com/a/60123976/325365
+        # https://github.com/yanyongyu/githubkit?tab=readme-ov-file#calling-graphql-api
     except Exception as error:
         if raise_on_error:
             raise

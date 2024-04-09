@@ -22,3 +22,5 @@ def main(profile_url: str, debug: bool, github_api_key: str | None = None):
         )
     )
     pprint(asdict(result))
+    if result.error:
+        raise click.Abort()

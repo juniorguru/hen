@@ -95,6 +95,8 @@ async def check_profile_url(
         data = await github.async_graphql(PINNED_REPOS_GQL, {"login": username})
         pinned_repos = data["user"]["pinnedItems"]["nodes"]
         results.extend(await send(on_pinned_repos, pinned_repos=pinned_repos))
+        for pinned_repo in pinned_repos:
+            results.extend(await send(on_pinned_repo, pinned_repo=pinned_repo))
     except Exception as error:
         if raise_on_error:
             raise

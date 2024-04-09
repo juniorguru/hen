@@ -7,6 +7,7 @@ from PIL import Image
 from jg.hen.core import (
     ResultType,
     on_avatar_response,
+    on_pinned_repo,
     on_pinned_repos,
     on_profile,
     on_social_accounts,
@@ -84,7 +85,7 @@ async def has_linkedin(social_accounts: list[SocialAccount]) -> tuple[ResultType
     on_pinned_repos,
     "https://junior.guru/handbook/github-profile/#vypichni-to-cim-se-chlubis",
 )
-async def has_some_pinned_repos(pinned_repos: list[str]) -> tuple[ResultType, str]:
+async def has_some_pinned_repos(pinned_repos: list) -> tuple[ResultType, str]:
     pinned_repos_count = len(pinned_repos)
     if pinned_repos_count:
         return (
@@ -94,4 +95,22 @@ async def has_some_pinned_repos(pinned_repos: list[str]) -> tuple[ResultType, st
     return (
         ResultType.RECOMMENDATION,
         "Připni si repozitáře, kterými se chceš chlubit.",
+    )
+
+
+@rule(
+    on_pinned_repo,
+    "https://junior.guru/handbook/github-profile/#popis-repozitare",
+)
+async def has_pinned_repo_with_description(
+    pinned_repo: dict,
+) -> tuple[ResultType, str]:
+    if pinned_repo.get("description"):
+        return (
+            ResultType.DONE,
+            f"U připnutého repozitáře {pinned_repo['nameWithOwner']} máš krátký popisek.",
+        )
+    return (
+        ResultType.RECOMMENDATION,
+        f"Přidej popisek k repozitáři {pinned_repo['nameWithOwner']}.",
     )

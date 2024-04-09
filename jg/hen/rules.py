@@ -31,7 +31,7 @@ async def has_avatar(
         and (IDENTICON_GREY in [color[1] for color in colors])  # identicon gray
     ):
         return ResultType.RECOMMENDATION, "Nastav si profilový obrázek."
-    return ResultType.DONE, "Máš nastavený vlastní profilový obrázek. Super!"
+    return ResultType.DONE, "Vlastní profilový obrázek máš nastavený."
 
 
 @rule(
@@ -40,8 +40,18 @@ async def has_avatar(
 )
 async def has_name(context: Context, user: PublicUser) -> tuple[ResultType, str]:
     if user.name:
-        return ResultType.DONE, f"Vidím, že jméno máš vyplněné ({user.name}). Super!"
+        return ResultType.DONE, f"Jméno máš vyplněné: {user.name}"
     return ResultType.RECOMMENDATION, "Doplň si jméno."
+
+
+@rule(
+    on_profile,
+    "https://junior.guru/handbook/github-profile/#vypln-si-zakladni-udaje",
+)
+async def has_bio(context: Context, user: PublicUser) -> tuple[ResultType, str]:
+    if user.bio:
+        return ResultType.DONE, "Bio máš vyplněné"
+    return ResultType.RECOMMENDATION, "Doplň si bio."
 
 
 @rule(
@@ -50,8 +60,5 @@ async def has_name(context: Context, user: PublicUser) -> tuple[ResultType, str]
 )
 async def has_location(context: Context, user: PublicUser) -> tuple[ResultType, str]:
     if user.location:
-        return (
-            ResultType.DONE,
-            f"Vidím, že lokaci máš vyplněnou ({user.location}). Super!",
-        )
+        return (ResultType.DONE, f"Lokaci máš vyplněnou: {user.location}")
     return ResultType.RECOMMENDATION, "Doplň si lokaci."

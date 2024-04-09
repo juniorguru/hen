@@ -1,7 +1,7 @@
 import asyncio
+import json
 import logging
 from dataclasses import asdict
-from pprint import pprint
 
 import click
 
@@ -21,6 +21,6 @@ def main(profile_url: str, debug: bool, github_api_key: str | None = None):
             github_api_key=github_api_key,
         )
     )
-    pprint(asdict(result))
+    click.echo(json.dumps(asdict(result), indent=2, ensure_ascii=False))
     if result.error:
         raise click.Abort()

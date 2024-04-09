@@ -1,7 +1,8 @@
+from datetime import date, datetime, timedelta
 from io import BytesIO
 
 import httpx
-from githubkit.rest import PublicUser, SocialAccount
+from githubkit.rest import PublicUser, Repository, SocialAccount
 from PIL import Image
 
 from jg.hen.core import (
@@ -10,12 +11,15 @@ from jg.hen.core import (
     on_pinned_repo,
     on_pinned_repos,
     on_profile,
+    on_repo,
     on_social_accounts,
     rule,
 )
 
 
 IDENTICON_GREY = (240, 240, 240)
+
+RECENT_REPO_THRESHOLD = timedelta(days=2 * 365)
 
 
 @rule(
@@ -108,9 +112,59 @@ async def has_pinned_repo_with_description(
     if pinned_repo.get("description"):
         return (
             ResultType.DONE,
-            f"U připnutého repozitáře {pinned_repo['nameWithOwner']} máš krátký popisek.",
+            f"U připnutého repozitáře {pinned_repo['nameWithOwner']} máš popisek.",
         )
     return (
         ResultType.RECOMMENDATION,
         f"Přidej popisek k repozitáři {pinned_repo['nameWithOwner']}.",
     )
+
+
+@rule(
+    on_pinned_repo,
+    "https://junior.guru/handbook/github-profile/#upozad-stare-veci-a-nedodelky",
+)
+async def has_pinned_recent_repo(
+    pinned_repo: dict, today: date | None = None
+) -> tuple[ResultType, str]:
+    today = today or date.today()
+    pushed_on = datetime.fromisoformat(pinned_repo["pushedAt"]).date()
+    if pushed_on > today - RECENT_REPO_THRESHOLD:
+        return (
+            ResultType.DONE,
+            f"Na připnutém repozitáři {pinned_repo['nameWithOwner']} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}, což je celkem nedávno.",
+        )
+    return (
+        ResultType.RECOMMENDATION,
+        f"Na repozitáři {pinned_repo['nameWithOwner']} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Zvaž, zda má být takto starý kód připnutý na tvém profilu.",
+    )
+
+
+@rule(
+    on_repo,
+    "https://junior.guru/handbook/github-profile/#upozad-stare-veci-a-nedodelky",
+)
+async def has_old_repo_archived(
+    repo: Repository, today: date | None = None
+) -> tuple[ResultType, str] | None:
+    today = today or date.today()
+
+    if repo.fork:
+        return None
+    if repo.pushed_at is None:
+        return None
+
+    pushed_on = repo.pushed_at.date()
+    if pushed_on > today - RECENT_REPO_THRESHOLD:
+        return None
+
+    if repo.archived:
+        return (
+            ResultType.DONE,
+            f"Na připnutém repozitáři {repo.full_name} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}, což je celkem nedávno.",
+        )
+    else:
+        return (
+            ResultType.RECOMMENDATION,
+            f"Na repozitáři {repo.full_name} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Možná by šlo repozitář archivovat.",
+        )

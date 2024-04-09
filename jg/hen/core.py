@@ -24,6 +24,7 @@ on_avatar_response = blinker.Signal()
 on_social_accounts = blinker.Signal()
 on_pinned_repos = blinker.Signal()
 on_pinned_repo = blinker.Signal()
+on_repo = blinker.Signal()
 
 
 class ResultType(StrEnum):
@@ -97,6 +98,12 @@ async def check_profile_url(
         results.extend(await send(on_pinned_repos, pinned_repos=pinned_repos))
         for pinned_repo in pinned_repos:
             results.extend(await send(on_pinned_repo, pinned_repo=pinned_repo))
+
+        async for minimal_repo in github.paginate(
+            github.rest.repos.async_list_for_user, username=username, type="owner"
+        ):
+            response = await github.rest.repos.async_get(username, minimal_repo.name)
+            results.extend(await send(on_repo, repo=response.parsed_data))
     except Exception as error:
         if raise_on_error:
             raise
@@ -120,19 +127,17 @@ def rule(signal: blinker.Signal, docs_url: str) -> Callable:
         async def wrapper(sender: None, *args, **kwargs) -> Result | None:
             try:
                 result = await fn(*args, **kwargs)
-                if result is None:
-                    raise NotImplementedError(
-                        f"Rule {fn.__name__!r} returned no result"
+                if result is not None:
+                    return Result(
+                        rule=fn.__name__,
+                        type=result[0],
+                        message=result[1],
+                        docs_url=docs_url,
                     )
-                return Result(
-                    rule=fn.__name__,
-                    type=result[0],
-                    message=result[1],
-                    docs_url=docs_url,
-                )
+                logger.debug(f"Rule {fn.__name__!r} returned no result")
             except NotImplementedError:
                 logger.warning(f"Rule {fn.__name__!r} not implemented")
-                return None
+            return None
 
         signal.connect(wrapper)
         return wrapper

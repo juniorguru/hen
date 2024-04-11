@@ -1,6 +1,6 @@
 import pytest
 
-from hen.core import parse_username
+from jg.hen.core import parse_username
 
 
 @pytest.mark.parametrize(

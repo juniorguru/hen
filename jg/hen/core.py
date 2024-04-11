@@ -80,7 +80,7 @@ async def check_profile_url(
     try:
         username = parse_username(profile_url)
 
-        import hen.rules  # noqa
+        import jg.hen.rules  # noqa
 
         response = await github.rest.users.async_get_by_username(username)
         user = response.parsed_data

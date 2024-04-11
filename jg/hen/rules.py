@@ -5,7 +5,7 @@ import httpx
 from githubkit.rest import PublicUser, Repository, SocialAccount
 from PIL import Image
 
-from hen.core import (
+from jg.hen.core import (
     ResultType,
     on_avatar_response,
     on_pinned_repo,

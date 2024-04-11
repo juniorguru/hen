@@ -5,7 +5,7 @@ from dataclasses import asdict
 
 import click
 
-from jg.hen.core import check_profile_url
+from hen.core import check_profile_url
 
 
 @click.command()

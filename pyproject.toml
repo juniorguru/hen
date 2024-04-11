@@ -2,7 +2,7 @@
 name = "jg.hen"
 version = "0.0"
 description = "Automated GitHub profile review"
-authors = ["Honza Javorek <mail@honzajavorek.cz>"]
+authors = ["Honza Javorek <honza@junior.guru>"]
 license = "AGPL-3.0-only"
 readme = "README.md"
 homepage = "https://junior.guru/"

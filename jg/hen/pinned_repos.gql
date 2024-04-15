@@ -3,10 +3,9 @@ query($login: String!) {
         pinnedItems(first: 6, types: REPOSITORY) {
             nodes {
                 ... on Repository {
-                    nameWithOwner
+                    url
                     description
                     pushedAt
-                    url
                 }
             }
         }

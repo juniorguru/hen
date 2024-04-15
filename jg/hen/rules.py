@@ -112,11 +112,11 @@ async def has_pinned_repo_with_description(
     if pinned_repo.get("description"):
         return (
             ResultType.DONE,
-            f"U připnutého repozitáře {pinned_repo['nameWithOwner']} máš popisek.",
+            f"U připnutého repozitáře {pinned_repo['url']} máš popisek.",
         )
     return (
         ResultType.RECOMMENDATION,
-        f"Přidej popisek k repozitáři {pinned_repo['nameWithOwner']}.",
+        f"Přidej popisek k repozitáři {pinned_repo['url']}.",
     )
 
 
@@ -132,11 +132,11 @@ async def has_pinned_recent_repo(
     if pushed_on > today - RECENT_REPO_THRESHOLD:
         return (
             ResultType.DONE,
-            f"Na připnutém repozitáři {pinned_repo['nameWithOwner']} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}, což je celkem nedávno.",
+            f"Na připnutém repozitáři {pinned_repo['url']} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}, což je celkem nedávno.",
         )
     return (
         ResultType.RECOMMENDATION,
-        f"Na repozitáři {pinned_repo['nameWithOwner']} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Zvaž, zda má být takto starý kód připnutý na tvém profilu.",
+        f"Na repozitáři {pinned_repo['url']} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Zvaž, zda má být takto starý kód připnutý na tvém profilu.",
     )
 
 
@@ -161,7 +161,7 @@ async def has_old_repo_archived(
     if repo.archived:
         return (
             ResultType.DONE,
-            f"Na připnutém repozitáři {repo.full_name} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}, což je celkem nedávno.",
+            f"Repozitář {repo.full_name} je celkem starý (poslední změna {pushed_on:%-d.%-m.%Y}). Je dobře, že je archivovaný.",
         )
     else:
         return (

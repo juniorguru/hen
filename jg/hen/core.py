@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 import blinker
 import httpx
 from githubkit import GitHub
+from githubkit.exception import RequestFailed
 
 
 USER_AGENT = "JuniorGuruBot (+https://junior.guru)"
@@ -26,6 +27,8 @@ on_pinned_repo = blinker.Signal()
 on_pinned_repos = blinker.Signal()
 on_repo = blinker.Signal()
 on_repos = blinker.Signal()
+on_readme = blinker.Signal()
+on_profile_readme = blinker.Signal()
 
 
 class ResultType(StrEnum):
@@ -98,8 +101,11 @@ async def check_profile_url(
 
         data = await github.async_graphql(PINNED_REPOS_GQL, {"login": username})
         pinned_urls = {repo["url"] for repo in data["user"]["pinnedItems"]["nodes"]}
+
         repos = []
         pinned_repos = []
+        profile_readme = None
+
         async for minimal_repo in github.paginate(
             github.rest.repos.async_list_for_user, username=username, type="owner"
         ):
@@ -110,6 +116,23 @@ async def check_profile_url(
             if repo.html_url in pinned_urls:
                 results.extend(await send(on_pinned_repo, pinned_repo=repo))
                 pinned_repos.append(repo)
+
+            try:
+                response = await github.rest.repos.async_get_readme(
+                    username,
+                    repo.name,
+                    headers={"Accept": "application/vnd.github.html+json"},
+                )
+                readme = response.text
+                results.extend(await send(on_readme, readme=readme))
+                if repo.name == username:
+                    profile_readme = readme
+            except RequestFailed as error:
+                if error.response.status_code != 404:
+                    raise
+                results.extend(await send(on_readme, readme=None))
+
+        results.extend(await send(on_profile_readme, readme=profile_readme))
         results.extend(await send(on_repos, repos=repos))
         results.extend(await send(on_pinned_repos, pinned_repos=pinned_repos))
     except Exception as error:

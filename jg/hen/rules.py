@@ -11,7 +11,9 @@ from jg.hen.core import (
     on_pinned_repo,
     on_pinned_repos,
     on_profile,
+    on_profile_readme,
     on_repo,
+    on_repos,
     on_social_accounts,
     rule,
 )
@@ -86,10 +88,22 @@ async def has_linkedin(social_accounts: list[SocialAccount]) -> tuple[ResultType
 
 
 @rule(
+    on_profile_readme,
+    "https://junior.guru/handbook/github-profile/#profilove-readme",
+)
+async def has_profile_readme(readme: str | None) -> tuple[ResultType, str]:
+    if readme:
+        return ResultType.DONE, "Máš profilové README."
+    return ResultType.INFO, "Můžeš si vytvořit profilové README."
+
+
+@rule(
     on_pinned_repos,
     "https://junior.guru/handbook/github-profile/#vypichni-to-cim-se-chlubis",
 )
-async def has_some_pinned_repos(pinned_repos: list) -> tuple[ResultType, str]:
+async def has_some_pinned_repos(
+    pinned_repos: list[FullRepository],
+) -> tuple[ResultType, str]:
     pinned_repos_count = len(pinned_repos)
     if pinned_repos_count:
         return (

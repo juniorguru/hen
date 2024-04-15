@@ -40,7 +40,7 @@ async def has_avatar(avatar_response: httpx.Response) -> tuple[ResultType, str]:
         and len(colors) <= 2  # has 2 or less colors
         and (IDENTICON_GREY in [color[1] for color in colors])  # identicon gray
     ):
-        return ResultType.RECOMMENDATION, "Nastav si profilový obrázek."
+        return ResultType.ERROR, "Nastav si profilový obrázek."
     return ResultType.DONE, "Vlastní profilový obrázek máš nastavený."
 
 
@@ -51,7 +51,7 @@ async def has_avatar(avatar_response: httpx.Response) -> tuple[ResultType, str]:
 async def has_name(user: PublicUser) -> tuple[ResultType, str]:
     if user.name:
         return ResultType.DONE, f"Jméno máš vyplněné: {user.name}"
-    return ResultType.RECOMMENDATION, "Doplň si jméno."
+    return ResultType.ERROR, "Doplň si jméno."
 
 
 @rule(
@@ -61,7 +61,7 @@ async def has_name(user: PublicUser) -> tuple[ResultType, str]:
 async def has_bio(user: PublicUser) -> tuple[ResultType, str]:
     if user.bio:
         return ResultType.DONE, "Bio máš vyplněné"
-    return ResultType.RECOMMENDATION, "Doplň si bio."
+    return ResultType.INFO, "Doplň si bio."
 
 
 @rule(
@@ -71,7 +71,7 @@ async def has_bio(user: PublicUser) -> tuple[ResultType, str]:
 async def has_location(user: PublicUser) -> tuple[ResultType, str]:
     if user.location:
         return (ResultType.DONE, f"Lokaci máš vyplněnou: {user.location}")
-    return ResultType.RECOMMENDATION, "Doplň si lokaci."
+    return ResultType.INFO, "Doplň si lokaci."
 
 
 @rule(
@@ -82,7 +82,7 @@ async def has_linkedin(social_accounts: list[SocialAccount]) -> tuple[ResultType
     for account in social_accounts:
         if account.provider == "linkedin":
             return ResultType.DONE, f"LinkedIn máš vyplněný: {account.url}"
-    return ResultType.RECOMMENDATION, "Doplň si odkaz na svůj LinkedIn profil."
+    return ResultType.ERROR, "Doplň si odkaz na svůj LinkedIn profil."
 
 
 @rule(
@@ -96,10 +96,7 @@ async def has_some_pinned_repos(pinned_repos: list) -> tuple[ResultType, str]:
             ResultType.DONE,
             f"Máš nějaké připnuté repozitáře (celkem {pinned_repos_count})",
         )
-    return (
-        ResultType.RECOMMENDATION,
-        "Připni si repozitáře, kterými se chceš chlubit.",
-    )
+    return (ResultType.ERROR, "Připni si repozitáře, kterými se chceš chlubit.")
 
 
 @rule(
@@ -115,7 +112,7 @@ async def has_pinned_repo_with_description(
             f"U připnutého repozitáře {pinned_repo['url']} máš popisek.",
         )
     return (
-        ResultType.RECOMMENDATION,
+        ResultType.ERROR,
         f"Přidej popisek k repozitáři {pinned_repo['url']}.",
     )
 
@@ -135,7 +132,7 @@ async def has_pinned_recent_repo(
             f"Na připnutém repozitáři {pinned_repo['url']} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}, což je celkem nedávno.",
         )
     return (
-        ResultType.RECOMMENDATION,
+        ResultType.WARNING,
         f"Na repozitáři {pinned_repo['url']} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Zvaž, zda má být takto starý kód připnutý na tvém profilu.",
     )
 
@@ -165,6 +162,6 @@ async def has_old_repo_archived(
         )
     else:
         return (
-            ResultType.RECOMMENDATION,
+            ResultType.WARNING,
             f"Na repozitáři {repo.full_name} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Možná by šlo repozitář archivovat.",
         )

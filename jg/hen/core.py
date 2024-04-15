@@ -28,8 +28,10 @@ on_repo = blinker.Signal()
 
 
 class ResultType(StrEnum):
+    ERROR = auto()
+    WARNING = auto()
+    INFO = auto()
     DONE = auto()
-    RECOMMENDATION = auto()
 
 
 @dataclass

@@ -17,13 +17,13 @@ pipx upgrade jg.hen
 
 ## Usage
 
-The following checks given GitHub profile and prints a JSON with results:
+To check a GitHub profile and print JSON with results, run the following:
 
 ```
 hen https://github.com/PavlaBerankova
 ```
 
-The result can be redirected to a file, which you can further process as you wish:
+The result can be redirected to a file, which you can further process as you wish.
 
 ```
 hen https://github.com/PavlaBerankova > report.json

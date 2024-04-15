@@ -13,7 +13,7 @@ packages = [{ include = "jg" }]
 hen = "jg.hen.cli:main"
 
 [tool.poetry.dependencies]
-python = ">=3.11.*"
+python = "3.11.*,3.12.*"
 click = "8.1.7"
 blinker = "1.7.0"
 githubkit = "0.11.3"

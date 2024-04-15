@@ -13,7 +13,6 @@ from jg.hen.core import (
     on_profile,
     on_profile_readme,
     on_repo,
-    on_repos,
     on_social_accounts,
     rule,
 )
@@ -123,9 +122,9 @@ async def has_pinned_repo_with_description(
     if pinned_repo.description:
         return (
             ResultType.DONE,
-            f"U připnutého repozitáře {pinned_repo.url} máš popisek.",
+            f"U připnutého repozitáře {pinned_repo.html_url} máš popisek.",
         )
-    return (ResultType.ERROR, f"Přidej popisek k repozitáři {pinned_repo.url}.")
+    return (ResultType.ERROR, f"Přidej popisek k repozitáři {pinned_repo.html_url}.")
 
 
 @rule(
@@ -135,21 +134,16 @@ async def has_pinned_repo_with_description(
 async def has_pinned_recent_repo(
     pinned_repo: FullRepository, today: date | None = None
 ) -> tuple[ResultType, str]:
-    if pinned_repo.pushed_at is None:
-        return (
-            ResultType.ERROR,
-            f"Na repozitáři {pinned_repo.url} se nikdy nepracovalo, nejspíš je prázdný. Neměl by být připnutý na profilu.",
-        )
     today = today or date.today()
     pushed_on = pinned_repo.pushed_at.date()
     if pushed_on > today - RECENT_REPO_THRESHOLD:
         return (
             ResultType.DONE,
-            f"Na připnutém repozitáři {pinned_repo.url} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}, což je celkem nedávno.",
+            f"Na připnutém repozitáři {pinned_repo.html_url} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}, což je celkem nedávno.",
         )
     return (
         ResultType.WARNING,
-        f"Na repozitáři {pinned_repo.url} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Zvaž, zda má být takto starý kód připnutý na tvém profilu.",
+        f"Na repozitáři {pinned_repo.html_url} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Zvaž, zda má být takto starý kód připnutý na tvém profilu.",
     )
 
 
@@ -174,10 +168,10 @@ async def has_old_repo_archived(
     if repo.archived:
         return (
             ResultType.DONE,
-            f"Repozitář {repo.url} je celkem starý (poslední změna {pushed_on:%-d.%-m.%Y}). Je dobře, že je archivovaný.",
+            f"Repozitář {repo.html_url} je celkem starý (poslední změna {pushed_on:%-d.%-m.%Y}). Je dobře, že je archivovaný.",
         )
     else:
         return (
             ResultType.WARNING,
-            f"Na repozitáři {repo.url} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Možná by šlo repozitář archivovat.",
+            f"Na repozitáři {repo.html_url} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Možná by šlo repozitář archivovat.",
         )

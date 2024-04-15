@@ -158,10 +158,10 @@ async def has_old_repo_archived(
     if repo.archived:
         return (
             ResultType.DONE,
-            f"Repozitář {repo.full_name} je celkem starý (poslední změna {pushed_on:%-d.%-m.%Y}). Je dobře, že je archivovaný.",
+            f"Repozitář {repo.url} je celkem starý (poslední změna {pushed_on:%-d.%-m.%Y}). Je dobře, že je archivovaný.",
         )
     else:
         return (
             ResultType.WARNING,
-            f"Na repozitáři {repo.full_name} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Možná by šlo repozitář archivovat.",
+            f"Na repozitáři {repo.url} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Možná by šlo repozitář archivovat.",
         )

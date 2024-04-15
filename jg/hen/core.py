@@ -22,9 +22,10 @@ logger = logging.getLogger("jg.hen.core")
 on_profile = blinker.Signal()
 on_avatar_response = blinker.Signal()
 on_social_accounts = blinker.Signal()
-on_pinned_repos = blinker.Signal()
 on_pinned_repo = blinker.Signal()
+on_pinned_repos = blinker.Signal()
 on_repo = blinker.Signal()
+on_repos = blinker.Signal()
 
 
 class ResultType(StrEnum):
@@ -96,16 +97,21 @@ async def check_profile_url(
         results.extend(await send(on_social_accounts, social_accounts=social_accounts))
 
         data = await github.async_graphql(PINNED_REPOS_GQL, {"login": username})
-        pinned_repos = data["user"]["pinnedItems"]["nodes"]
-        results.extend(await send(on_pinned_repos, pinned_repos=pinned_repos))
-        for pinned_repo in pinned_repos:
-            results.extend(await send(on_pinned_repo, pinned_repo=pinned_repo))
-
+        pinned_urls = {repo["url"] for repo in data["user"]["pinnedItems"]["nodes"]}
+        repos = []
+        pinned_repos = []
         async for minimal_repo in github.paginate(
             github.rest.repos.async_list_for_user, username=username, type="owner"
         ):
             response = await github.rest.repos.async_get(username, minimal_repo.name)
-            results.extend(await send(on_repo, repo=response.parsed_data))
+            repo = response.parsed_data
+            results.extend(await send(on_repo, repo=repo))
+            repos.append(repo)
+            if repo.html_url in pinned_urls:
+                results.extend(await send(on_pinned_repo, pinned_repo=repo))
+                pinned_repos.append(repo)
+        results.extend(await send(on_repos, repos=repos))
+        results.extend(await send(on_pinned_repos, pinned_repos=pinned_repos))
     except Exception as error:
         if raise_on_error:
             raise

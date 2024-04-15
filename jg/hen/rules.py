@@ -1,8 +1,8 @@
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from io import BytesIO
 
 import httpx
-from githubkit.rest import PublicUser, Repository, SocialAccount
+from githubkit.rest import FullRepository, PublicUser, SocialAccount
 from PIL import Image
 
 from jg.hen.core import (
@@ -104,17 +104,14 @@ async def has_some_pinned_repos(pinned_repos: list) -> tuple[ResultType, str]:
     "https://junior.guru/handbook/github-profile/#popis-repozitare",
 )
 async def has_pinned_repo_with_description(
-    pinned_repo: dict,
+    pinned_repo: FullRepository,
 ) -> tuple[ResultType, str]:
-    if pinned_repo.get("description"):
+    if pinned_repo.description:
         return (
             ResultType.DONE,
-            f"U připnutého repozitáře {pinned_repo['url']} máš popisek.",
+            f"U připnutého repozitáře {pinned_repo.url} máš popisek.",
         )
-    return (
-        ResultType.ERROR,
-        f"Přidej popisek k repozitáři {pinned_repo['url']}.",
-    )
+    return (ResultType.ERROR, f"Přidej popisek k repozitáři {pinned_repo.url}.")
 
 
 @rule(
@@ -122,18 +119,23 @@ async def has_pinned_repo_with_description(
     "https://junior.guru/handbook/github-profile/#upozad-stare-veci-a-nedodelky",
 )
 async def has_pinned_recent_repo(
-    pinned_repo: dict, today: date | None = None
+    pinned_repo: FullRepository, today: date | None = None
 ) -> tuple[ResultType, str]:
+    if pinned_repo.pushed_at is None:
+        return (
+            ResultType.ERROR,
+            f"Na repozitáři {pinned_repo.url} se nikdy nepracovalo, nejspíš je prázdný. Neměl by být připnutý na profilu.",
+        )
     today = today or date.today()
-    pushed_on = datetime.fromisoformat(pinned_repo["pushedAt"]).date()
+    pushed_on = pinned_repo.pushed_at.date()
     if pushed_on > today - RECENT_REPO_THRESHOLD:
         return (
             ResultType.DONE,
-            f"Na připnutém repozitáři {pinned_repo['url']} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}, což je celkem nedávno.",
+            f"Na připnutém repozitáři {pinned_repo.url} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}, což je celkem nedávno.",
         )
     return (
         ResultType.WARNING,
-        f"Na repozitáři {pinned_repo['url']} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Zvaž, zda má být takto starý kód připnutý na tvém profilu.",
+        f"Na repozitáři {pinned_repo.url} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Zvaž, zda má být takto starý kód připnutý na tvém profilu.",
     )
 
 
@@ -142,7 +144,7 @@ async def has_pinned_recent_repo(
     "https://junior.guru/handbook/github-profile/#upozad-stare-veci-a-nedodelky",
 )
 async def has_old_repo_archived(
-    repo: Repository, today: date | None = None
+    repo: FullRepository, today: date | None = None
 ) -> tuple[ResultType, str] | None:
     today = today or date.today()
 

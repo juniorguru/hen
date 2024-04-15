@@ -21,6 +21,16 @@ def main(profile_url: str, debug: bool, github_api_key: str | None = None):
             github_api_key=github_api_key,
         )
     )
-    click.echo(json.dumps(asdict(result), indent=2, ensure_ascii=False))
+    click.echo(
+        json.dumps(asdict(result), indent=2, ensure_ascii=False, default=serialize)
+    )
     if result.error:
         raise click.Abort()
+
+
+def serialize(obj):
+    if isinstance(obj, Exception):
+        return str(obj)
+    raise TypeError(
+        f"Object of type {obj.__class__.__name__} is not JSON serializable."
+    )

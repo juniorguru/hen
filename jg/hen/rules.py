@@ -6,7 +6,7 @@ from githubkit.rest import FullRepository, PublicUser, SocialAccount
 from PIL import Image
 
 from jg.hen.core import (
-    ResultType,
+    OutcomeType,
     on_avatar_response,
     on_pinned_repo,
     on_pinned_repos,
@@ -27,7 +27,7 @@ RECENT_REPO_THRESHOLD = timedelta(days=2 * 365)
     on_avatar_response,
     "https://junior.guru/handbook/github-profile/#nastav-si-vlastni-obrazek",
 )
-async def has_avatar(avatar_response: httpx.Response) -> tuple[ResultType, str]:
+async def has_avatar(avatar_response: httpx.Response) -> tuple[OutcomeType, str]:
     try:
         avatar_response.raise_for_status()
     except httpx.HTTPStatusError as e:
@@ -41,59 +41,59 @@ async def has_avatar(avatar_response: httpx.Response) -> tuple[ResultType, str]:
         and len(colors) <= 2  # has 2 or less colors
         and (IDENTICON_GREY in [color[1] for color in colors])  # identicon gray
     ):
-        return ResultType.ERROR, "Nastav si profilový obrázek."
-    return ResultType.DONE, "Vlastní profilový obrázek máš nastavený."
+        return OutcomeType.ERROR, "Nastav si profilový obrázek."
+    return OutcomeType.DONE, "Vlastní profilový obrázek máš nastavený."
 
 
 @rule(
     on_profile,
     "https://junior.guru/handbook/github-profile/#vypln-si-zakladni-udaje",
 )
-async def has_name(user: PublicUser) -> tuple[ResultType, str]:
+async def has_name(user: PublicUser) -> tuple[OutcomeType, str]:
     if user.name:
-        return ResultType.DONE, f"Jméno máš vyplněné: {user.name}"
-    return ResultType.ERROR, "Doplň si jméno."
+        return OutcomeType.DONE, f"Jméno máš vyplněné: {user.name}"
+    return OutcomeType.ERROR, "Doplň si jméno."
 
 
 @rule(
     on_profile,
     "https://junior.guru/handbook/github-profile/#vypln-si-zakladni-udaje",
 )
-async def has_bio(user: PublicUser) -> tuple[ResultType, str]:
+async def has_bio(user: PublicUser) -> tuple[OutcomeType, str]:
     if user.bio:
-        return ResultType.DONE, "Bio máš vyplněné"
-    return ResultType.INFO, "Doplň si bio."
+        return OutcomeType.DONE, "Bio máš vyplněné"
+    return OutcomeType.INFO, "Doplň si bio."
 
 
 @rule(
     on_profile,
     "https://junior.guru/handbook/github-profile/#vypln-si-zakladni-udaje",
 )
-async def has_location(user: PublicUser) -> tuple[ResultType, str]:
+async def has_location(user: PublicUser) -> tuple[OutcomeType, str]:
     if user.location:
-        return (ResultType.DONE, f"Lokaci máš vyplněnou: {user.location}")
-    return ResultType.INFO, "Doplň si lokaci."
+        return (OutcomeType.DONE, f"Lokaci máš vyplněnou: {user.location}")
+    return OutcomeType.INFO, "Doplň si lokaci."
 
 
 @rule(
     on_social_accounts,
     "https://junior.guru/handbook/github-profile/#zviditelni-sve-dalsi-profily",
 )
-async def has_linkedin(social_accounts: list[SocialAccount]) -> tuple[ResultType, str]:
+async def has_linkedin(social_accounts: list[SocialAccount]) -> tuple[OutcomeType, str]:
     for account in social_accounts:
         if account.provider == "linkedin":
-            return ResultType.DONE, f"LinkedIn máš vyplněný: {account.url}"
-    return ResultType.ERROR, "Doplň si odkaz na svůj LinkedIn profil."
+            return OutcomeType.DONE, f"LinkedIn máš vyplněný: {account.url}"
+    return OutcomeType.ERROR, "Doplň si odkaz na svůj LinkedIn profil."
 
 
 @rule(
     on_profile_readme,
     "https://junior.guru/handbook/github-profile/#profilove-readme",
 )
-async def has_profile_readme(readme: str | None) -> tuple[ResultType, str]:
+async def has_profile_readme(readme: str | None) -> tuple[OutcomeType, str]:
     if readme:
-        return ResultType.DONE, "Máš profilové README."
-    return ResultType.INFO, "Můžeš si vytvořit profilové README."
+        return OutcomeType.DONE, "Máš profilové README."
+    return OutcomeType.INFO, "Můžeš si vytvořit profilové README."
 
 
 @rule(
@@ -102,14 +102,14 @@ async def has_profile_readme(readme: str | None) -> tuple[ResultType, str]:
 )
 async def has_some_pinned_repos(
     pinned_repos: list[FullRepository],
-) -> tuple[ResultType, str]:
+) -> tuple[OutcomeType, str]:
     pinned_repos_count = len(pinned_repos)
     if pinned_repos_count:
         return (
-            ResultType.DONE,
+            OutcomeType.DONE,
             f"Máš nějaké připnuté repozitáře (celkem {pinned_repos_count})",
         )
-    return (ResultType.ERROR, "Připni si repozitáře, kterými se chceš chlubit.")
+    return (OutcomeType.ERROR, "Připni si repozitáře, kterými se chceš chlubit.")
 
 
 @rule(
@@ -118,13 +118,13 @@ async def has_some_pinned_repos(
 )
 async def has_pinned_repo_with_description(
     pinned_repo: FullRepository,
-) -> tuple[ResultType, str]:
+) -> tuple[OutcomeType, str]:
     if pinned_repo.description:
         return (
-            ResultType.DONE,
+            OutcomeType.DONE,
             f"U připnutého repozitáře {pinned_repo.html_url} máš popisek.",
         )
-    return (ResultType.ERROR, f"Přidej popisek k repozitáři {pinned_repo.html_url}.")
+    return (OutcomeType.ERROR, f"Přidej popisek k repozitáři {pinned_repo.html_url}.")
 
 
 @rule(
@@ -133,16 +133,16 @@ async def has_pinned_repo_with_description(
 )
 async def has_pinned_recent_repo(
     pinned_repo: FullRepository, today: date | None = None
-) -> tuple[ResultType, str]:
+) -> tuple[OutcomeType, str]:
     today = today or date.today()
     pushed_on = pinned_repo.pushed_at.date()
     if pushed_on > today - RECENT_REPO_THRESHOLD:
         return (
-            ResultType.DONE,
+            OutcomeType.DONE,
             f"Na připnutém repozitáři {pinned_repo.html_url} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}, což je celkem nedávno.",
         )
     return (
-        ResultType.WARNING,
+        OutcomeType.WARNING,
         f"Na repozitáři {pinned_repo.html_url} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Zvaž, zda má být takto starý kód připnutý na tvém profilu.",
     )
 
@@ -153,7 +153,7 @@ async def has_pinned_recent_repo(
 )
 async def has_old_repo_archived(
     repo: FullRepository, today: date | None = None
-) -> tuple[ResultType, str] | None:
+) -> tuple[OutcomeType, str] | None:
     today = today or date.today()
 
     if repo.fork:
@@ -167,11 +167,11 @@ async def has_old_repo_archived(
 
     if repo.archived:
         return (
-            ResultType.DONE,
+            OutcomeType.DONE,
             f"Repozitář {repo.html_url} je celkem starý (poslední změna {pushed_on:%-d.%-m.%Y}). Je dobře, že je archivovaný.",
         )
     else:
         return (
-            ResultType.WARNING,
+            OutcomeType.WARNING,
             f"Na repozitáři {repo.html_url} se naposledy pracovalo {pushed_on:%-d.%-m.%Y}. Možná by šlo repozitář archivovat.",
         )

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import StrEnum, auto
 from functools import wraps
 from pathlib import Path
-from typing import Callable, Coroutine, Literal
+from typing import Any, AsyncGenerator, Callable, Coroutine, Literal
 from urllib.parse import urlparse
 
 import blinker
@@ -31,7 +31,7 @@ on_readme = blinker.Signal()
 on_profile_readme = blinker.Signal()
 
 
-class ResultType(StrEnum):
+class OutcomeType(StrEnum):
     ERROR = auto()
     WARNING = auto()
     INFO = auto()
@@ -39,17 +39,27 @@ class ResultType(StrEnum):
 
 
 @dataclass
-class Result:
+class Outcome:
     rule: str
-    type: ResultType
+    type: OutcomeType
     message: str
     docs_url: str
 
 
 @dataclass
+class Insight:
+    name: str
+    data: list[tuple[str, Any]]
+
+
+SummaryStatus = Literal["ok", "error"]
+
+
+@dataclass
 class Summary:
-    status: Literal["ok", "error"]
-    results: list[Result]
+    status: SummaryStatus
+    outcomes: list[Outcome]
+    insights: list[Insight]
     error: Exception | None = None
 
 
@@ -87,6 +97,7 @@ async def check_profile_url(
         username = parse_username(profile_url)
 
         import jg.hen.rules  # noqa
+        import jg.hen.insights  # noqa
 
         response = await github.rest.users.async_get_by_username(username)
         user = response.parsed_data
@@ -138,28 +149,38 @@ async def check_profile_url(
     except Exception as error:
         if raise_on_error:
             raise
-        return Summary(status="error", results=results, error=error)
-    return Summary(status="ok", results=results)
+        return create_summary(status="error", results=results, error=error)
+    return create_summary(status="ok", results=results)
 
 
-async def send(signal: blinker.Signal, **kwargs) -> list[Result]:
+async def send(signal: blinker.Signal, **kwargs) -> list[Outcome | Insight]:
     return collect_results(await signal.send_async(None, **kwargs))
 
 
 def collect_results(
-    raw_results: list[tuple[Callable, Result | None]],
-) -> list[Result]:
+    raw_results: list[tuple[Callable, Outcome | Insight | None]],
+) -> list[Outcome | Insight]:
     return [result for _, result in raw_results if result]
+
+
+def create_summary(
+    status: SummaryStatus,
+    results: list[Outcome | Insight],
+    error: Exception | None = None,
+) -> Summary:
+    outcomes = [result for result in results if isinstance(result, Outcome)]
+    insights = [result for result in results if isinstance(result, Insight)]
+    return Summary(status, outcomes=outcomes, insights=insights, error=error)
 
 
 def rule(signal: blinker.Signal, docs_url: str) -> Callable:
     def decorator(fn: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
         @wraps(fn)
-        async def wrapper(sender: None, *args, **kwargs) -> Result | None:
+        async def wrapper(sender: None, *args, **kwargs) -> Outcome | None:
             try:
                 result = await fn(*args, **kwargs)
                 if result is not None:
-                    return Result(
+                    return Outcome(
                         rule=fn.__name__,
                         type=result[0],
                         message=result[1],
@@ -169,6 +190,25 @@ def rule(signal: blinker.Signal, docs_url: str) -> Callable:
             except NotImplementedError:
                 logger.warning(f"Rule {fn.__name__!r} not implemented")
             return None
+
+        signal.connect(wrapper)
+        return wrapper
+
+    return decorator
+
+
+def insight(signal: blinker.Signal) -> Callable:
+    def decorator(fn: Callable[..., AsyncGenerator]) -> Callable[..., Coroutine]:
+        @wraps(fn)
+        async def wrapper(sender: None, *args, **kwargs) -> Insight:
+            data = []
+            try:
+                data = [(key, value) async for key, value in fn(*args, **kwargs)]
+                if not data:
+                    logger.debug(f"Insight {fn.__name__!r} returned no results")
+            except NotImplementedError:
+                logger.warning(f"Insight {fn.__name__!r} not implemented")
+            return Insight(name=fn.__name__, data=data)
 
         signal.connect(wrapper)
         return wrapper

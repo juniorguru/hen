@@ -40,7 +40,7 @@ class Status(StrEnum):
 @dataclass
 class Outcome:
     rule: str
-    type: Status
+    status: Status
     message: str
     docs_url: str
 
@@ -190,7 +190,7 @@ def rule(signal: blinker.Signal, docs_url: str) -> Callable:
                 if result is not None:
                     return Outcome(
                         rule=fn.__name__,
-                        type=result[0],
+                        status=result[0],
                         message=result[1],
                         docs_url=docs_url,
                     )

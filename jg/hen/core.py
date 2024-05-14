@@ -54,6 +54,7 @@ class Insight:
 
 @dataclass
 class Summary:
+    username: str
     outcomes: list[Outcome]
     insights: dict[str, Any]
     error: Exception | None = None
@@ -146,8 +147,8 @@ async def check_profile_url(
     except Exception as error:
         if raise_on_error:
             raise
-        return create_summary(results=results, error=error)
-    return create_summary(results=results)
+        return create_summary(username=username, results=results, error=error)
+    return create_summary(username=username, results=results)
 
 
 async def send(signal: blinker.Signal, **kwargs) -> list[Outcome | Insight]:
@@ -168,9 +169,10 @@ def get_pin(pinned_urls: list[str], repo_url: str) -> int | None:
 
 
 def create_summary(
-    results: list[Outcome | Insight], error: Exception | None = None
+    username: str, results: list[Outcome | Insight], error: Exception | None = None
 ) -> Summary:
     return Summary(
+        username=username,
         outcomes=[result for result in results if isinstance(result, Outcome)],
         insights={
             result.name: result.value

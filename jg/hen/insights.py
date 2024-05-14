@@ -58,7 +58,9 @@ async def projects(contexts: list[RepositoryContext]) -> list[dict[str, Any]]:
 
 
 def parse_readme(readme: str | None) -> dict[str, Any | None]:
-    html_tree = html.fromstring(readme or "")
+    if not readme:
+        return dict(title=None)
+    html_tree = html.fromstring(readme)
     try:
         title = html_tree.cssselect("h1, h2")[0].text_content().strip()
     except IndexError:

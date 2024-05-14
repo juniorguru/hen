@@ -1,15 +1,18 @@
+import json
 import logging
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from datetime import date, datetime
 from enum import StrEnum, auto
 from functools import wraps
 from pathlib import Path
-from typing import Any, AsyncGenerator, Callable, Coroutine, Literal
+from typing import Any, Callable, Coroutine
 from urllib.parse import urlparse
 
 import blinker
 import httpx
 from githubkit import GitHub
 from githubkit.exception import RequestFailed
+from githubkit.rest import FullRepository
 
 
 USER_AGENT = "JuniorGuruBot (+https://junior.guru)"
@@ -23,15 +26,11 @@ logger = logging.getLogger("jg.hen.core")
 on_profile = blinker.Signal()
 on_avatar_response = blinker.Signal()
 on_social_accounts = blinker.Signal()
-on_pinned_repo = blinker.Signal()
-on_pinned_repos = blinker.Signal()
 on_repo = blinker.Signal()
 on_repos = blinker.Signal()
-on_readme = blinker.Signal()
-on_profile_readme = blinker.Signal()
 
 
-class OutcomeType(StrEnum):
+class Status(StrEnum):
     ERROR = auto()
     WARNING = auto()
     INFO = auto()
@@ -41,7 +40,7 @@ class OutcomeType(StrEnum):
 @dataclass
 class Outcome:
     rule: str
-    type: OutcomeType
+    type: Status
     message: str
     docs_url: str
 
@@ -49,18 +48,23 @@ class Outcome:
 @dataclass
 class Insight:
     name: str
-    data: list[tuple[str, Any]]
-
-
-SummaryStatus = Literal["ok", "error"]
+    value: Any
+    collect: bool = False
 
 
 @dataclass
 class Summary:
-    status: SummaryStatus
     outcomes: list[Outcome]
-    insights: list[Insight]
+    insights: dict[str, Any]
     error: Exception | None = None
+
+
+@dataclass
+class RepositoryContext:
+    repo: FullRepository
+    readme: str | None
+    is_profile: bool
+    pin: int | None
 
 
 def with_github(fn: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
@@ -111,23 +115,15 @@ async def check_profile_url(
         results.extend(await send(on_social_accounts, social_accounts=social_accounts))
 
         data = await github.async_graphql(PINNED_REPOS_GQL, {"login": username})
-        pinned_urls = {repo["url"] for repo in data["user"]["pinnedItems"]["nodes"]}
+        pinned_urls = [repo["url"] for repo in data["user"]["pinnedItems"]["nodes"]]
 
-        repos = []
-        pinned_repos = []
-        profile_readme = None
-
+        contexts = []
         async for minimal_repo in github.paginate(
             github.rest.repos.async_list_for_user, username=username, type="owner"
         ):
             response = await github.rest.repos.async_get(username, minimal_repo.name)
             repo = response.parsed_data
-            results.extend(await send(on_repo, repo=repo))
-            repos.append(repo)
-            if repo.html_url in pinned_urls:
-                results.extend(await send(on_pinned_repo, pinned_repo=repo))
-                pinned_repos.append(repo)
-
+            readme = None
             try:
                 response = await github.rest.repos.async_get_readme(
                     username,
@@ -135,22 +131,23 @@ async def check_profile_url(
                     headers={"Accept": "application/vnd.github.html+json"},
                 )
                 readme = response.text
-                results.extend(await send(on_readme, readme=readme))
-                if repo.name == username:
-                    profile_readme = readme
             except RequestFailed as error:
                 if error.response.status_code != 404:
                     raise
-                results.extend(await send(on_readme, readme=None))
-
-        results.extend(await send(on_profile_readme, readme=profile_readme))
-        results.extend(await send(on_repos, repos=repos))
-        results.extend(await send(on_pinned_repos, pinned_repos=pinned_repos))
+            context = RepositoryContext(
+                repo=repo,
+                readme=readme,
+                is_profile=repo.name == username,
+                pin=get_pin(pinned_urls, repo.html_url),
+            )
+            results.extend(await send(on_repo, context=context))
+            contexts.append(context)
+        results.extend(await send(on_repos, contexts=contexts))
     except Exception as error:
         if raise_on_error:
             raise
-        return create_summary(status="error", results=results, error=error)
-    return create_summary(status="ok", results=results)
+        return create_summary(results=results, error=error)
+    return create_summary(results=results)
 
 
 async def send(signal: blinker.Signal, **kwargs) -> list[Outcome | Insight]:
@@ -163,14 +160,25 @@ def collect_results(
     return [result for _, result in raw_results if result]
 
 
+def get_pin(pinned_urls: list[str], repo_url: str) -> int | None:
+    try:
+        return pinned_urls.index(repo_url)
+    except ValueError:
+        return None
+
+
 def create_summary(
-    status: SummaryStatus,
-    results: list[Outcome | Insight],
-    error: Exception | None = None,
+    results: list[Outcome | Insight], error: Exception | None = None
 ) -> Summary:
-    outcomes = [result for result in results if isinstance(result, Outcome)]
-    insights = [result for result in results if isinstance(result, Insight)]
-    return Summary(status, outcomes=outcomes, insights=insights, error=error)
+    return Summary(
+        outcomes=[result for result in results if isinstance(result, Outcome)],
+        insights={
+            result.name: result.value
+            for result in results
+            if isinstance(result, Insight)
+        },
+        error=error,
+    )
 
 
 def rule(signal: blinker.Signal, docs_url: str) -> Callable:
@@ -186,7 +194,7 @@ def rule(signal: blinker.Signal, docs_url: str) -> Callable:
                         message=result[1],
                         docs_url=docs_url,
                     )
-                logger.debug(f"Rule {fn.__name__!r} returned no result")
+                logger.debug(f"Rule {fn.__name__!r} returned no outcome")
             except NotImplementedError:
                 logger.warning(f"Rule {fn.__name__!r} not implemented")
             return None
@@ -198,17 +206,16 @@ def rule(signal: blinker.Signal, docs_url: str) -> Callable:
 
 
 def insight(signal: blinker.Signal) -> Callable:
-    def decorator(fn: Callable[..., AsyncGenerator]) -> Callable[..., Coroutine]:
+    def decorator(fn: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
         @wraps(fn)
         async def wrapper(sender: None, *args, **kwargs) -> Insight:
-            data = []
             try:
-                data = [(key, value) async for key, value in fn(*args, **kwargs)]
-                if not data:
-                    logger.debug(f"Insight {fn.__name__!r} returned no results")
+                value = await fn(*args, **kwargs)
+                if value is None:
+                    logger.debug(f"Insight {fn.__name__!r} returned no value")
             except NotImplementedError:
                 logger.warning(f"Insight {fn.__name__!r} not implemented")
-            return Insight(name=fn.__name__, data=data)
+            return Insight(name=fn.__name__, value=value)
 
         signal.connect(wrapper)
         return wrapper
@@ -221,3 +228,17 @@ def parse_username(profile_url: str) -> str:
     if not parts.netloc.endswith("github.com"):
         raise ValueError("Only GitHub profiles are supported")
     return parts.path.strip("/")
+
+
+def asjson(summary: Summary) -> str:
+    return json.dumps(asdict(summary), indent=2, ensure_ascii=False, default=serialize)
+
+
+def serialize(obj: Any) -> str:
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    if isinstance(obj, Exception):
+        return str(obj)
+    raise TypeError(
+        f"Object of type {obj.__class__.__name__} is not JSON serializable."
+    )

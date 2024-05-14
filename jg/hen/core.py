@@ -232,7 +232,7 @@ def parse_username(profile_url: str) -> str:
     return parts.path.strip("/")
 
 
-def asjson(summary: Summary) -> str:
+def to_json(summary: Summary) -> str:
     return json.dumps(asdict(summary), indent=2, ensure_ascii=False, default=serialize)
 
 

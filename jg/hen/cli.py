@@ -3,7 +3,7 @@ import logging
 
 import click
 
-from jg.hen.core import asjson, check_profile_url
+from jg.hen.core import check_profile_url, to_json
 
 
 @click.command()
@@ -19,6 +19,6 @@ def main(profile_url: str, debug: bool, github_api_key: str | None = None):
             github_api_key=github_api_key,
         )
     )
-    click.echo(asjson(summary))
+    click.echo(to_json(summary))
     if summary.error:
         raise click.Abort()

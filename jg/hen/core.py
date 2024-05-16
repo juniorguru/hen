@@ -1,92 +1,28 @@
-import json
 import logging
-from dataclasses import asdict, dataclass
-from datetime import date, datetime
-from enum import StrEnum, auto
-from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, Coroutine
 from urllib.parse import urlparse
 
-import blinker
 import httpx
 from githubkit import GitHub
 from githubkit.exception import RequestFailed
-from githubkit.rest import FullRepository
 
+from jg.hen.clients import with_github, with_http
+from jg.hen.models import RepositoryContext, Summary
+from jg.hen.signals import (
+    load_receivers,
+    on_avatar_response,
+    on_profile,
+    on_repo,
+    on_repos,
+    on_social_accounts,
+    send,
+)
 
-USER_AGENT = "JuniorGuruBot (+https://junior.guru)"
 
 PINNED_REPOS_GQL = Path(__file__).with_name("pinned_repos.gql").read_text()
 
 
 logger = logging.getLogger("jg.hen.core")
-
-
-on_profile = blinker.Signal()
-on_avatar_response = blinker.Signal()
-on_social_accounts = blinker.Signal()
-on_repo = blinker.Signal()
-on_repos = blinker.Signal()
-
-
-class Status(StrEnum):
-    ERROR = auto()
-    WARNING = auto()
-    INFO = auto()
-    DONE = auto()
-
-
-@dataclass
-class Outcome:
-    rule: str
-    status: Status
-    message: str
-    docs_url: str
-
-
-@dataclass
-class Insight:
-    name: str
-    value: Any
-    collect: bool = False
-
-
-@dataclass
-class Summary:
-    username: str
-    outcomes: list[Outcome]
-    insights: dict[str, Any]
-    error: Exception | None = None
-
-
-@dataclass
-class RepositoryContext:
-    repo: FullRepository
-    readme: str | None
-    is_profile: bool
-    pin: int | None
-
-
-def with_github(fn: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
-    @wraps(fn)
-    async def wrapper(*args, **kwargs) -> Coroutine:
-        github_api_key = kwargs.pop("github_api_key", None)
-        async with GitHub(github_api_key, user_agent=USER_AGENT) as github:
-            return await fn(*args, github=github, **kwargs)
-
-    return wrapper
-
-
-def with_http(fn: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
-    @wraps(fn)
-    async def wrapper(*args, **kwargs) -> Coroutine:
-        async with httpx.AsyncClient(
-            follow_redirects=True, headers={"User-Agent": USER_AGENT}
-        ) as client:
-            return await fn(*args, http=client, **kwargs)
-
-    return wrapper
 
 
 @with_github
@@ -100,8 +36,7 @@ async def check_profile_url(
     results = []
     username = parse_username(profile_url)
     try:
-        import jg.hen.rules  # noqa
-        import jg.hen.insights  # noqa
+        load_receivers(["jg.hen.rules", "jg.hen.insights"])
 
         response = await github.rest.users.async_get_by_username(username)
         user = response.parsed_data
@@ -150,82 +85,8 @@ async def check_profile_url(
     except Exception as error:
         if raise_on_error:
             raise
-        return create_summary(username=username, results=results, error=error)
-    return create_summary(username=username, results=results)
-
-
-async def send(signal: blinker.Signal, **kwargs) -> list[Outcome | Insight]:
-    return collect_results(await signal.send_async(None, **kwargs))
-
-
-def collect_results(
-    raw_results: list[tuple[Callable, Outcome | Insight | None]],
-) -> list[Outcome | Insight]:
-    return [result for _, result in raw_results if result]
-
-
-def get_pin(pinned_urls: list[str], repo_url: str) -> int | None:
-    try:
-        return pinned_urls.index(repo_url)
-    except ValueError:
-        return None
-
-
-def create_summary(
-    username: str, results: list[Outcome | Insight], error: Exception | None = None
-) -> Summary:
-    return Summary(
-        username=username,
-        outcomes=[result for result in results if isinstance(result, Outcome)],
-        insights={
-            result.name: result.value
-            for result in results
-            if isinstance(result, Insight)
-        },
-        error=error,
-    )
-
-
-def rule(signal: blinker.Signal, docs_url: str) -> Callable:
-    def decorator(fn: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
-        @wraps(fn)
-        async def wrapper(sender: None, *args, **kwargs) -> Outcome | None:
-            try:
-                result = await fn(*args, **kwargs)
-                if result is not None:
-                    return Outcome(
-                        rule=fn.__name__,
-                        status=result[0],
-                        message=result[1],
-                        docs_url=docs_url,
-                    )
-                logger.debug(f"Rule {fn.__name__!r} returned no outcome")
-            except NotImplementedError:
-                logger.warning(f"Rule {fn.__name__!r} not implemented")
-            return None
-
-        signal.connect(wrapper)
-        return wrapper
-
-    return decorator
-
-
-def insight(signal: blinker.Signal) -> Callable:
-    def decorator(fn: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
-        @wraps(fn)
-        async def wrapper(sender: None, *args, **kwargs) -> Insight:
-            try:
-                value = await fn(*args, **kwargs)
-                if value is None:
-                    logger.debug(f"Insight {fn.__name__!r} returned no value")
-            except NotImplementedError:
-                logger.warning(f"Insight {fn.__name__!r} not implemented")
-            return Insight(name=fn.__name__, value=value)
-
-        signal.connect(wrapper)
-        return wrapper
-
-    return decorator
+        return Summary.create(username=username, results=results, error=error)
+    return Summary.create(username=username, results=results)
 
 
 def parse_username(profile_url: str) -> str:
@@ -235,15 +96,8 @@ def parse_username(profile_url: str) -> str:
     return parts.path.strip("/")
 
 
-def to_json(summary: Summary) -> str:
-    return json.dumps(asdict(summary), indent=2, ensure_ascii=False, default=serialize)
-
-
-def serialize(obj: Any) -> str:
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    if isinstance(obj, Exception):
-        return str(obj)
-    raise TypeError(
-        f"Object of type {obj.__class__.__name__} is not JSON serializable."
-    )
+def get_pin(pinned_urls: list[str], repo_url: str) -> int | None:
+    try:
+        return pinned_urls.index(repo_url)
+    except ValueError:
+        return None

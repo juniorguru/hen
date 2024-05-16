@@ -1,39 +1,9 @@
 from typing import Any
 
-import httpx
-from githubkit.rest import PublicUser, SocialAccount
 from lxml import html
 
-from jg.hen.core import (
-    RepositoryContext,
-    insight,
-    on_avatar_response,
-    on_profile,
-    on_repos,
-    on_social_accounts,
-)
-
-
-@insight(on_profile)
-async def name(user: PublicUser) -> str | None:
-    return user.name
-
-
-@insight(on_profile)
-async def location(user: PublicUser) -> str | None:
-    return user.location
-
-
-@insight(on_avatar_response)
-async def avatar_url(avatar_response: httpx.Response) -> str:
-    return str(avatar_response.url)
-
-
-@insight(on_social_accounts)
-async def linkedin_url(social_accounts: list[SocialAccount]) -> str | None:
-    for account in social_accounts:
-        if account.provider == "linkedin":
-            return account.url
+from jg.hen.models import RepositoryContext
+from jg.hen.signals import insight, on_repos
 
 
 @insight(on_repos)

@@ -47,6 +47,7 @@ class ProjectInfo(BaseModel):
 
 class Info(BaseModel):
     name: str | None
+    bio: str | None
     location: str | None
     linkedin_url: str | None
     avatar_url: str

@@ -3,7 +3,7 @@ from enum import StrEnum, auto
 from typing import Any, Self
 
 from githubkit.rest import FullRepository
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel, ConfigDict, field_serializer
 
 
 class Status(StrEnum):
@@ -55,13 +55,12 @@ class Info(BaseModel):
 
 
 class Summary(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     username: str
     outcomes: list[Outcome]
     info: Info
     error: Exception | None = None
-
-    class Config:
-        arbitrary_types_allowed = True
 
     @field_serializer("error")
     def error_to_str(error: Exception) -> str | None:  # type: ignore

@@ -98,9 +98,8 @@ async def check_profile_url(
     raise_on_error: bool = False,
 ) -> Summary:
     results = []
+    username = parse_username(profile_url)
     try:
-        username = parse_username(profile_url)
-
         import jg.hen.rules  # noqa
         import jg.hen.insights  # noqa
 
@@ -125,21 +124,25 @@ async def check_profile_url(
             response = await github.rest.repos.async_get(username, minimal_repo.name)
             repo = response.parsed_data
             readme = None
-            try:
-                response = await github.rest.repos.async_get_readme(
-                    username,
-                    repo.name,
-                    headers={"Accept": "application/vnd.github.html+json"},
-                )
-                readme = response.text
-            except RequestFailed as error:
-                if error.response.status_code != 404:
-                    raise
+            pin = get_pin(pinned_urls, repo.html_url)
+            # For efficiency, ignore downloading README for archived repos
+            # which are not pinned
+            if pin is not None or not repo.archived:
+                try:
+                    response = await github.rest.repos.async_get_readme(
+                        username,
+                        repo.name,
+                        headers={"Accept": "application/vnd.github.html+json"},
+                    )
+                    readme = response.text
+                except RequestFailed as error:
+                    if error.response.status_code != 404:
+                        raise
             context = RepositoryContext(
                 repo=repo,
                 readme=readme,
                 is_profile=repo.name == username,
-                pin=get_pin(pinned_urls, repo.html_url),
+                pin=pin,
             )
             results.extend(await send(on_repo, context=context))
             contexts.append(context)

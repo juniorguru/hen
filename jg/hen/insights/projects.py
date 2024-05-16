@@ -19,8 +19,8 @@ async def projects(contexts: list[RepositoryContext]) -> list[dict[str, Any]]:
                 "live_url": context.repo.homepage or None,
                 "description": context.repo.description,
                 "priority": context.pin,
-                "start_at": context.repo.created_at,
-                "end_at": context.repo.pushed_at,
+                "start_on": context.repo.created_at.date(),
+                "end_on": context.repo.pushed_at.date(),
                 "topics": context.repo.topics,
             }
         )

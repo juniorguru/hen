@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 from enum import StrEnum, auto
 from typing import Any, Self
 
@@ -40,8 +40,8 @@ class ProjectInfo(BaseModel):
     live_url: str | None
     description: str | None
     priority: int | None
-    start_at: datetime
-    end_at: datetime
+    start_on: date
+    end_on: date
     topics: list[str]
 
 

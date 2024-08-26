@@ -28,7 +28,7 @@ pytest = "8.3.2"
 pytest-ruff = "0.4.1"
 ruff = "0.6.*"
 cookiecutter = "2.6.0"
-pytest-asyncio = "0.23.8"
+pytest-asyncio = "0.24.0"
 
 [tool.pytest.ini_options]
 python_files = "test_*.py"

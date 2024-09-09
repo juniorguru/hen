@@ -255,13 +255,13 @@ files = [
 
 [[package]]
 name = "githubkit"
-version = "0.11.8"
+version = "0.11.9"
 description = "GitHub SDK for Python"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "githubkit-0.11.8-py3-none-any.whl", hash = "sha256:fb6cf775ef38c21d38226565219606009cecd67358e46db99c2499199ab3b94b"},
-    {file = "githubkit-0.11.8.tar.gz", hash = "sha256:e6114f66cd1fcf9fa1c58987366ce75b98325d5ea708a0108533ab7417701c8f"},
+    {file = "githubkit-0.11.9-py3-none-any.whl", hash = "sha256:68933ff9867467418c90176e2ea77c7623fa7ab8fbf64723c2ca56c09b14a0f6"},
+    {file = "githubkit-0.11.9.tar.gz", hash = "sha256:d25da1a667cce32f3d1ab0f33cf52fa328a55e85a6916e19da2765b0602c472a"},
 ]
 
 [package.dependencies]
@@ -1197,4 +1197,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11 <4.0"
-content-hash = "70a9f3c17a7ab69dd1d75f9189744b1706986d979db6afb2edc138580a1b75c7"
+content-hash = "51c7436d5830c6cbe534fca1c1bdee682e2b3335c14eee4ea18572a4b23b82f9"

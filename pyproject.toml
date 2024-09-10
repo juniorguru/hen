@@ -24,7 +24,7 @@ cssselect = "1.2.0"
 pydantic = "2.8.2"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "8.3.2"
+pytest = "8.3.3"
 pytest-ruff = "0.4.1"
 ruff = "0.6.*"
 cookiecutter = "2.6.0"

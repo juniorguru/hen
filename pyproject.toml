@@ -19,7 +19,7 @@ blinker = "1.9.0"
 githubkit = "0.12.6"
 httpx = "0.28.1"
 pillow = "11.1.0"
-lxml = "5.3.0"
+lxml = "5.3.1"
 cssselect = "1.2.0"
 pydantic = "2.10.6"
 

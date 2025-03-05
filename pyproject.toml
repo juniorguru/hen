@@ -34,6 +34,7 @@ pytest-asyncio = "0.25.3"
 python_files = "test_*.py"
 testpaths = "tests"
 addopts = "--import-mode=importlib --ff --ruff --ruff-format"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 target-version = "py311"

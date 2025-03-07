@@ -3,6 +3,7 @@ from enum import StrEnum, auto
 from typing import Any, Self
 
 from githubkit.rest import FullRepository
+from githubkit.exception import RequestFailed
 from pydantic import BaseModel, ConfigDict, field_serializer
 
 
@@ -60,12 +61,16 @@ class Summary(BaseModel):
 
     username: str
     outcomes: list[Outcome]
-    info: Info
+    info: Info | None = None
     error: Exception | None = None
 
     @field_serializer("error")
     def error_to_str(error: Exception) -> str | None:  # type: ignore
-        return str(error) if error else None
+        if error is None:
+            return None
+        if isinstance(error, RequestFailed):
+            return f"HTTP {error.response.status_code} - {error.request.method.upper()} {error.request.url}"
+        return str(error)
 
     @classmethod
     def create(
@@ -83,6 +88,6 @@ class Summary(BaseModel):
         return cls(
             username=username,
             outcomes=outcomes,
-            info=Info(**insights),
+            info=Info(**insights) if insights else None,
             error=error,
         )

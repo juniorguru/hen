@@ -2,8 +2,8 @@ from datetime import date
 from enum import StrEnum, auto
 from typing import Any, Self
 
-from githubkit.rest import FullRepository
 from githubkit.exception import RequestFailed
+from githubkit.rest import FullRepository
 from pydantic import BaseModel, ConfigDict, field_serializer
 
 

@@ -50,6 +50,10 @@ Useful commands:
 -   To format code, run `ruff format`.
 -   To organize imports and fix other issues, run `ruff check --fix`.
 
+## Getting raw data
+Using `-r` records data from GitHub to the `.data` directory.
+Such data is useful if you want to debug your rules or [test them against real world fixtures](https://github.com/yanyongyu/githubkit/issues/98#issuecomment-2059235461).
+
 ## Name
 Why Hen?
 Because hens are mothers, they lovingly raise chicks.

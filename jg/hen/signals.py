@@ -3,11 +3,11 @@ import pkgutil
 from functools import wraps
 from importlib import import_module
 from pprint import pformat
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable, Concatenate, Coroutine, ParamSpec
 
 import blinker
 
-from jg.hen.models import Insight, Outcome
+from jg.hen.models import Insight, Outcome, Status
 
 
 on_profile = blinker.Signal()
@@ -65,10 +65,25 @@ def collect_results(
     return [result for _, result in raw_results if result]
 
 
-def rule(signal: blinker.Signal, docs_url: str) -> Callable:
-    def decorator(fn: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
+RuleParams = ParamSpec("RuleParams")
+
+RuleResult = tuple[Status, str]
+
+RuleFunction = Callable[RuleParams, Coroutine[None, None, RuleResult]]
+
+RuleWrapper = Callable[
+    Concatenate[None, RuleParams], Coroutine[None, None, Outcome | None]
+]
+
+
+def rule(
+    signal: blinker.Signal, docs_url: str
+) -> Callable[[RuleFunction], RuleWrapper]:
+    def decorator(fn: RuleFunction) -> RuleWrapper:
         @wraps(fn)
-        async def wrapper(sender: None, *args, **kwargs) -> Outcome | None:
+        async def wrapper(
+            sender: None, *args: RuleParams.args, **kwargs: RuleParams.kwargs
+        ) -> Outcome | None:
             try:
                 result = await fn(*args, **kwargs)
                 if result is not None:
@@ -89,10 +104,24 @@ def rule(signal: blinker.Signal, docs_url: str) -> Callable:
     return decorator
 
 
-def insight(signal: blinker.Signal) -> Callable:
-    def decorator(fn: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
+InsightParams = ParamSpec("InsightParams")
+
+InsightResult = Any
+
+InsightFunction = Callable[InsightParams, Coroutine[None, None, InsightResult]]
+
+InsightWrapper = Callable[
+    Concatenate[None, InsightParams], Coroutine[None, None, Insight]
+]
+
+
+def insight(signal: blinker.Signal) -> Callable[[InsightFunction], InsightWrapper]:
+    def decorator(fn: InsightFunction) -> InsightWrapper:
         @wraps(fn)
-        async def wrapper(sender: None, *args, **kwargs) -> Insight:
+        async def wrapper(
+            sender: None, *args: InsightParams.args, **kwargs: InsightParams.kwargs
+        ) -> Insight:
+            value = None
             try:
                 value = await fn(*args, **kwargs)
                 if value is None:

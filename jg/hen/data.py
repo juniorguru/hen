@@ -30,7 +30,7 @@ def create_data_recorder(data_dir: Path) -> DataRecorder:
     def _record_data(key: str, data: Any) -> None:
         hash = hashlib.sha256(key.encode()).hexdigest()[:8]
         slug = slugify(key.removeprefix("https://api.github.com"), max_length=50)
-        path = data_dir / f"{hash}-{slug}.json"
+        path = data_dir / f"{slug}.{hash}.json"
         logger.info(f"Recording {key!r} to '.data/{path.name}'")
         path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
 

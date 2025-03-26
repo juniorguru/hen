@@ -50,7 +50,9 @@ async def check_profile_url(
 
         response = await github.rest.users.async_list_social_accounts_for_user(username)
         social_accounts = await process_response(response)
-        results.extend(await send(on_social_accounts, social_accounts=social_accounts))
+        results.extend(
+            await send(on_social_accounts, social_accounts=social_accounts, user=user)
+        )
 
         data = await github.async_graphql(PINNED_REPOS_GQL, {"login": username})
         if record_data:

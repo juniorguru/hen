@@ -1,10 +1,12 @@
 import logging
 from pathlib import Path
+from typing import Any, Awaitable, Callable, Coroutine, TypeVar
 from urllib.parse import urlparse
 
 import httpx
 from githubkit import GitHub
 from githubkit.exception import RequestFailed
+from githubkit.response import Response
 
 from jg.hen.clients import with_github, with_http
 from jg.hen.models import RepositoryContext, Summary
@@ -32,24 +34,28 @@ async def check_profile_url(
     github: GitHub,
     http: httpx.AsyncClient,
     raise_on_error: bool = False,
+    record_data: Callable[[str, Any], Awaitable[None]] | None = None,
 ) -> Summary:
     results = []
     username = parse_username(profile_url)
+    process_response = get_response_processor(record_data)
     try:
         load_receivers(["jg.hen.rules", "jg.hen.insights"])
 
         response = await github.rest.users.async_get_by_username(username)
-        user = response.parsed_data
+        user = await process_response(response)
         results.extend(await send(on_profile, user=user))
 
         response = await http.get(user.avatar_url)
         results.extend(await send(on_avatar_response, avatar_response=response))
 
         response = await github.rest.users.async_list_social_accounts_for_user(username)
-        social_accounts = response.parsed_data
+        social_accounts = await process_response(response)
         results.extend(await send(on_social_accounts, social_accounts=social_accounts))
 
         data = await github.async_graphql(PINNED_REPOS_GQL, {"login": username})
+        if record_data:
+            await record_data(PINNED_REPOS_GQL, data)
         pinned_urls = [repo["url"] for repo in data["user"]["pinnedItems"]["nodes"]]
 
         contexts = []
@@ -57,7 +63,7 @@ async def check_profile_url(
             github.rest.repos.async_list_for_user, username=username, type="owner"
         ):
             response = await github.rest.repos.async_get(username, minimal_repo.name)
-            repo = response.parsed_data
+            repo = await process_response(response)
             readme = None
             pin = get_pin(pinned_urls, repo.html_url)
             # For efficiency, ignore downloading README for archived repos
@@ -101,3 +107,17 @@ def get_pin(pinned_urls: list[str], repo_url: str) -> int | None:
         return pinned_urls.index(repo_url)
     except ValueError:
         return None
+
+
+ParsedData = TypeVar("ParsedData")
+
+
+def get_response_processor(
+    record_data: Callable[[str, Any], Awaitable[None]] | None,
+) -> Callable[[Response[ParsedData]], Coroutine[None, None, ParsedData]]:
+    async def process_response(response: Response[ParsedData]) -> ParsedData:
+        if record_data:
+            await record_data(str(response.url), response.json())
+        return response.parsed_data
+
+    return process_response

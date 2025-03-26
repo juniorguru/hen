@@ -1,14 +1,13 @@
 import logging
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Coroutine, TypeVar
 from urllib.parse import urlparse
 
 import httpx
 from githubkit import GitHub
 from githubkit.exception import RequestFailed
-from githubkit.response import Response
 
 from jg.hen.clients import with_github, with_http
+from jg.hen.data import DataRecorder, get_response_processor
 from jg.hen.models import RepositoryContext, Summary
 from jg.hen.signals import (
     load_receivers,
@@ -34,7 +33,7 @@ async def check_profile_url(
     github: GitHub,
     http: httpx.AsyncClient,
     raise_on_error: bool = False,
-    record_data: Callable[[str, Any], Awaitable[None]] | None = None,
+    record_data: DataRecorder | None = None,
 ) -> Summary:
     results = []
     username = parse_username(profile_url)
@@ -107,17 +106,3 @@ def get_pin(pinned_urls: list[str], repo_url: str) -> int | None:
         return pinned_urls.index(repo_url)
     except ValueError:
         return None
-
-
-ParsedData = TypeVar("ParsedData")
-
-
-def get_response_processor(
-    record_data: Callable[[str, Any], Awaitable[None]] | None,
-) -> Callable[[Response[ParsedData]], Coroutine[None, None, ParsedData]]:
-    async def process_response(response: Response[ParsedData]) -> ParsedData:
-        if record_data:
-            await record_data(str(response.url), response.json())
-        return response.parsed_data
-
-    return process_response

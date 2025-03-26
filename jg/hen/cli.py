@@ -1,15 +1,11 @@
 import asyncio
-import hashlib
-import json
 import logging
-import shutil
 from pathlib import Path
-from typing import Any, Callable, Coroutine
 
 import click
-from slugify import slugify
 
 from jg.hen.core import check_profile_url
+from jg.hen.data import create_data_recorder, flush_dir
 from jg.hen.models import Summary
 
 
@@ -38,9 +34,11 @@ def main(
     github_api_key: str | None = None,
 ):
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+
     if record_data:
-        shutil.rmtree(data_dir, ignore_errors=True)
-        data_dir.mkdir()
+        flush_dir(data_dir)
+
     summary: Summary = asyncio.run(
         check_profile_url(
             profile_url,
@@ -49,18 +47,7 @@ def main(
             github_api_key=github_api_key,
         )
     )
+
     click.echo(summary.model_dump_json(indent=2))
     if summary.error:
         raise click.Abort()
-
-
-def create_data_recorder(
-    data_dir: Path,
-) -> Callable[[str, Any], Coroutine[None, None, None]]:
-    async def record_data(key: str, data: Any) -> None:
-        hash = hashlib.sha256(key.encode()).hexdigest()[:8]
-        slug = slugify(key.removeprefix("https://api.github.com"), max_length=50)
-        path = data_dir / f"{hash}-{slug}.json"
-        path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
-
-    return record_data

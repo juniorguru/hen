@@ -7,7 +7,7 @@ from githubkit import GitHub
 from githubkit.exception import RequestFailed
 
 from jg.hen.clients import with_github, with_http
-from jg.hen.data import DataRecorder, ResponseProcessor, get_response_processor
+from jg.hen.data import DataRecorder, get_response_processor
 from jg.hen.models import RepositoryContext, Summary
 from jg.hen.signals import (
     load_receivers,

@@ -34,7 +34,6 @@ async def test_rule_has_linkedin_error(user: PublicUser):
     assert result.status == Status.ERROR
 
 
-@pytest.mark.skip("TODO: https://github.com/juniorguru/hen/issues/84")
 @pytest.mark.asyncio
 async def test_rule_has_linkedin_warning(user: PublicUser):
     user.blog = "https://www.linkedin.com/in/honzajavorek"

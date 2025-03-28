@@ -40,7 +40,9 @@ def create_data_recorder(data_dir: Path) -> DataRecorder:
     return record_data
 
 
-def get_response_processor(record_data: DataRecorder | None) -> ResponseProcessor:
+def get_response_processor(
+    record_data: DataRecorder | None,
+) -> ResponseProcessor[ParsedData]:
     async def process_response(response: Response[ParsedData]) -> ParsedData:
         if record_data:
             await record_data(str(response.url), response.json())

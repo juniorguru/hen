@@ -7,7 +7,7 @@ from githubkit import GitHub
 from githubkit.exception import RequestFailed
 
 from jg.hen.clients import with_github, with_http
-from jg.hen.data import DataRecorder, get_response_processor
+from jg.hen.data import DataRecorder, ResponseProcessor, get_response_processor
 from jg.hen.models import RepositoryContext, Summary
 from jg.hen.signals import (
     load_receivers,
@@ -41,50 +41,67 @@ async def check_profile_url(
     try:
         load_receivers(["jg.hen.rules", "jg.hen.insights"])
 
+        logger.debug("Fetching profile data")
         response = await github.rest.users.async_get_by_username(username)
         user = await process_response(response)
         results.extend(await send(on_profile, user=user))
 
+        logger.debug("Fetching avatar")
         response = await http.get(user.avatar_url)
         results.extend(await send(on_avatar_response, avatar_response=response))
 
+        logger.debug("Fetching social accounts")
         response = await github.rest.users.async_list_social_accounts_for_user(username)
         social_accounts = await process_response(response)
         results.extend(
             await send(on_social_accounts, social_accounts=social_accounts, user=user)
         )
 
+        logger.debug("Fetching a list of pinned repositories")
         data = await github.async_graphql(PINNED_REPOS_GQL, {"login": username})
         if record_data:
             await record_data(PINNED_REPOS_GQL, data)
-        pinned_urls = [repo["url"] for repo in data["user"]["pinnedItems"]["nodes"]]
+        repo_slugs = [
+            repo["nameWithOwner"] for repo in data["user"]["pinnedItems"]["nodes"]
+        ]
+        pins_index = list(repo_slugs)
 
-        contexts = []
+        logger.debug("Fetching a list of owned repositories")
         async for minimal_repo in github.paginate(
             github.rest.repos.async_list_for_user, username=username, type="owner"
         ):
-            response = await github.rest.repos.async_get(username, minimal_repo.name)
+            repo_slugs.append(f"{username}/{minimal_repo.name}")
+
+        contexts = []
+        for repo_slug in repo_slugs:
+            logger.debug(f"Fetching details for {repo_slug}")
+            repo_owner, repo_name = repo_slug.split("/")
+            response = await github.rest.repos.async_get(repo_owner, repo_name)
             repo = await process_response(response)
+            pin_index = get_pin_index(repo_slug, pins_index)
+
+            logger.debug(f"Fetching README for {repo_slug}")
             readme = None
-            pin = get_pin(pinned_urls, repo.html_url)
-            # For efficiency, ignore downloading README for archived repos
-            # which are not pinned
-            if pin is not None or not repo.archived:
+            if pin_index is not None or not repo.archived:
                 try:
                     response = await github.rest.repos.async_get_readme(
-                        username,
-                        repo.name,
+                        repo_owner,
+                        repo_name,
                         headers={"Accept": "application/vnd.github.html+json"},
                     )
                     readme = response.text
                 except RequestFailed as error:
                     if error.response.status_code != 404:
                         raise
+            else:
+                # For efficiency, ignore downloading README for archived repos
+                # which are not pinned
+                logger.debug(f"Skipping README for archived {repo_slug}")
             context = RepositoryContext(
+                username=username,
+                pin_index=pin_index,
                 repo=repo,
                 readme=readme,
-                is_profile=repo.name == username,
-                pin=pin,
             )
             results.extend(await send(on_repo, context=context))
             contexts.append(context)
@@ -103,8 +120,8 @@ def parse_username(profile_url: str) -> str:
     return parts.path.strip("/")
 
 
-def get_pin(pinned_urls: list[str], repo_url: str) -> int | None:
+def get_pin_index(repo_slug: str, pins_index: list[str]) -> int | None:
     try:
-        return pinned_urls.index(repo_url)
+        return pins_index.index(repo_slug)
     except ValueError:
         return None

@@ -14,7 +14,7 @@ RECENT_REPO_THRESHOLD = timedelta(days=2 * 365)
 async def has_pinned_recent_repo(
     context: RepositoryContext, today: date | None = None
 ) -> RuleResult | None:
-    if context.pin is None:
+    if context.pin_index is None:
         return None
     today = today or date.today()
     pushed_on = context.repo.pushed_at.date()

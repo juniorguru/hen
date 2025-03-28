@@ -15,10 +15,10 @@ class Status(StrEnum):
 
 
 class RepositoryContext(BaseModel):
+    username: str
+    pin_index: int | None
     repo: FullRepository
     readme: str | None
-    is_profile: bool
-    pin: int | None
 
 
 class Outcome(BaseModel):

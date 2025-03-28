@@ -4,7 +4,7 @@ import httpx
 from PIL import Image
 
 from jg.hen.models import Status
-from jg.hen.signals import on_avatar_response, rule
+from jg.hen.signals import RuleResult, on_avatar_response, rule
 
 
 IDENTICON_GREY = (240, 240, 240)
@@ -14,7 +14,7 @@ IDENTICON_GREY = (240, 240, 240)
     on_avatar_response,
     "https://junior.guru/handbook/github-profile/#nastav-si-vlastni-obrazek",
 )
-async def has_avatar(avatar_response: httpx.Response) -> tuple[Status, str]:
+async def has_avatar(avatar_response: httpx.Response) -> RuleResult:
     try:
         avatar_response.raise_for_status()
     except httpx.HTTPStatusError as e:

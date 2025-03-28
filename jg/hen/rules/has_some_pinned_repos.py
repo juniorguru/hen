@@ -1,5 +1,5 @@
 from jg.hen.models import RepositoryContext, Status
-from jg.hen.signals import on_repos, rule
+from jg.hen.signals import RuleResult, on_repos, rule
 
 
 @rule(
@@ -8,7 +8,7 @@ from jg.hen.signals import on_repos, rule
 )
 async def has_some_pinned_repos(
     contexts: list[RepositoryContext],
-) -> tuple[Status, str]:
+) -> RuleResult:
     pinned_repos = [context.repo for context in contexts if context.pin is not None]
     if pinned_repos_count := len(pinned_repos):
         return (

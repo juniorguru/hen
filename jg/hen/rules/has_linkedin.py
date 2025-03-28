@@ -1,7 +1,7 @@
 from githubkit.rest import PublicUser, SocialAccount
 
 from jg.hen.models import Status
-from jg.hen.signals import on_social_accounts, rule
+from jg.hen.signals import RuleResult, on_social_accounts, rule
 
 
 @rule(
@@ -10,7 +10,7 @@ from jg.hen.signals import on_social_accounts, rule
 )
 async def has_linkedin(
     social_accounts: list[SocialAccount], user: PublicUser
-) -> tuple[Status, str]:
+) -> RuleResult:
     for account in social_accounts:
         if account.provider == "linkedin":
             return (Status.DONE, f"LinkedIn máš vyplněný: {account.url}")

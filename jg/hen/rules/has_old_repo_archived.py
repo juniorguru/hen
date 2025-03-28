@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from jg.hen.models import RepositoryContext, Status
-from jg.hen.signals import on_repo, rule
+from jg.hen.signals import RuleResult, on_repo, rule
 
 
 OLD_REPO_THRESHOLD = timedelta(days=2 * 365)
@@ -13,7 +13,7 @@ OLD_REPO_THRESHOLD = timedelta(days=2 * 365)
 )
 async def has_old_repo_archived(
     context: RepositoryContext, today: date | None = None
-) -> tuple[Status, str] | None:
+) -> RuleResult | None:
     today = today or date.today()
 
     if context.repo.fork:

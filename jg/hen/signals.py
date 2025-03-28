@@ -69,7 +69,7 @@ RuleParams = ParamSpec("RuleParams")
 
 RuleResult = tuple[Status, str]
 
-RuleFunction = Callable[RuleParams, Coroutine[None, None, RuleResult]]
+RuleFunction = Callable[RuleParams, Coroutine[None, None, RuleResult | None]]
 
 RuleWrapper = Callable[
     Concatenate[None, RuleParams], Coroutine[None, None, Outcome | None]

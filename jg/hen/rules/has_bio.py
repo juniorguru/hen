@@ -11,4 +11,4 @@ from jg.hen.signals import RuleResult, on_profile, rule
 async def has_bio(user: PublicUser) -> RuleResult:
     if user.bio:
         return (Status.DONE, "Bio máš vyplněné")
-    return (Status.INFO, "Doplň si bio.")
+    return (Status.INFO, "Může být dobrý nápad doplnit si bio.")

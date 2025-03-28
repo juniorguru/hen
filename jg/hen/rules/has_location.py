@@ -11,4 +11,4 @@ from jg.hen.signals import RuleResult, on_profile, rule
 async def has_location(user: PublicUser) -> RuleResult:
     if user.location:
         return (Status.DONE, f"Lokaci máš vyplněnou: {user.location}")
-    return (Status.INFO, "Doplň si lokaci.")
+    return (Status.INFO, "Může být dobrý nápad doplnit si lokaci.")

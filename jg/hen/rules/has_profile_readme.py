@@ -13,4 +13,4 @@ async def has_profile_readme(contexts: list[RepositoryContext]) -> RuleResult:
             and context.readme
         ):
             return (Status.DONE, "Máš profilové README.")
-    return (Status.INFO, "Můžeš si vytvořit profilové README.")
+    return (Status.INFO, "Může být dobrý nápad vytvořit si profilové README.")

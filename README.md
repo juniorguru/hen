@@ -33,22 +33,22 @@ hen https://github.com/PavlaBerankova > report.json
 
 Installation:
 
-1.  You'll need [poetry](https://python-poetry.org/) installed.
+1.  You'll need [uv](https://docs.astral.sh/uv/) installed.
 2.  Clone this repository: `git clone git@github.com:juniorguru/hen.git`
 3.  Go to the project directory: `cd hen`
-4.  Install the project: `poetry install`
+4.  Install the project: `uv sync`
 
 Running locally:
 
 -   Set the `GITHUB_API_KEY` environment variable to your GitHub API token if you want higher GitHub API rate limits.
     Using [direnv](https://direnv.net/) might help setting environment variables automatically in your shell when you navigate to the project directory.
--   Run `poetry run hen --help` to start the program.
+-   Run `uv run hen --help` to start the program.
 
 Useful commands:
 
--   To test, run `pytest`.
--   To format code, run `ruff format`.
--   To organize imports and fix other issues, run `ruff check --fix`.
+-   To test, run `uv run pytest`.
+-   To format code, run `uv run ruff format`.
+-   To organize imports and fix other issues, run `uv run ruff check --fix`.
 
 ## Getting raw data
 Using `-r` records data from GitHub to the `.data` directory.

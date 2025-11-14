@@ -1,35 +1,38 @@
-[tool.poetry]
+[project]
 name = "jg.hen"
 version = "0.0"
 description = "Automated GitHub profile review"
-authors = ["Honza Javorek <honza@junior.guru>"]
-license = "AGPL-3.0-only"
 readme = "README.md"
-homepage = "https://junior.guru/"
-repository = "https://github.com/juniorguru/hen"
-packages = [{ include = "jg" }]
+authors = [{name = "Honza Javorek", email = "honza@junior.guru"}]
+license = {text = "AGPL-3.0-only"}
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "click>=8.3.0",
+    "blinker>=1.9.0",
+    "githubkit>=0.13.6",
+    "httpx>=0.28.1",
+    "pillow>=12.0.0",
+    "lxml>=6.0.2",
+    "cssselect>=1.3.0",
+    "pydantic>=2.12.4",
+    "python-slugify>=8.0.4",
+]
 
-[tool.poetry.scripts]
+[project.urls]
+homepage = "https://junior.guru/handbook/github-profile/"
+repository = "https://github.com/juniorguru/hen/"
+
+[project.scripts]
 hen = "jg.hen.cli:main"
 
-[tool.poetry.dependencies]
-python = ">=3.11 <4.0"
-click = "8.3.0"
-blinker = "1.9.0"
-githubkit = "0.13.6"
-httpx = "0.28.1"
-pillow = "12.0.0"
-lxml = "6.0.2"
-cssselect = "1.3.0"
-pydantic = "2.12.4"
-python-slugify = "^8.0.4"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "8.4.2"
-pytest-ruff = "0.5"
-ruff = "0.14.*"
-cookiecutter = "2.6.0"
-pytest-asyncio = "1.2.0"
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-ruff>=0.5",
+    "ruff>=0.14.0,<0.15.0",
+    "cookiecutter>=2.6.0",
+    "pytest-asyncio>=1.2.0",
+]
 
 [tool.pytest.ini_options]
 python_files = "test_*.py"
@@ -38,8 +41,7 @@ addopts = "--import-mode=importlib --ff --ruff --ruff-format"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
-target-version = "py311"
-extend-exclude = ["rule_template"]
+target-version = "py313"
 
 [tool.ruff.lint]
 extend-select = ["I"]
@@ -49,5 +51,8 @@ combine-as-imports = true
 lines-after-imports = 2
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.8.11,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "jg.hen"

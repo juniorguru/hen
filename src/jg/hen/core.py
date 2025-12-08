@@ -80,9 +80,10 @@ async def check_profile_url(
             repo = await process_response(response)
             pin_index = get_pin_index(repo_slug, pins_index)
 
-            logger.debug(f"Fetching README for {repo_slug}")
             readme = None
+            languages = None
             if pin_index is not None or not repo.archived:
+                logger.debug(f"Fetching README for {repo_slug}")
                 try:
                     response = await github.rest.repos.async_get_readme(
                         repo_owner,
@@ -93,15 +94,22 @@ async def check_profile_url(
                 except RequestFailed as error:
                     if error.response.status_code != 404:
                         raise
+
+                logger.debug(f"Fetching languages for {repo_slug}")
+                response = await github.rest.repos.async_list_languages(
+                    repo_owner, repo_name
+                )
+                languages = (await process_response(response)).model_dump()
             else:
-                # For efficiency, ignore downloading README for archived repos
-                # which are not pinned
-                logger.debug(f"Skipping README for archived {repo_slug}")
+                # For efficiency, ignore downloading additional details
+                # for archived repos which are not pinned
+                logger.debug(f"Skipping fetching additional details for {repo_slug}")
             context = RepositoryContext(
                 username=username,
                 pin_index=pin_index,
                 repo=repo,
                 readme=readme,
+                languages=languages,
             )
             results.extend(await send(on_repo, context=context))
             contexts.append(context)

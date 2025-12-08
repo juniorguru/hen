@@ -22,6 +22,9 @@ async def projects(contexts: list[RepositoryContext]) -> list[dict[str, Any]]:
                 "start_on": context.repo.created_at.date(),
                 "end_on": context.repo.pushed_at.date(),
                 "topics": context.repo.topics,
+                "languages": (
+                    list(context.languages.keys()) if context.languages else []
+                ),
             }
         )
     return projects

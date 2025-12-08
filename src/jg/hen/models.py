@@ -3,7 +3,7 @@ from enum import StrEnum, auto
 from typing import Any, Self
 
 from githubkit.exception import RequestFailed
-from githubkit.rest import FullRepository
+from githubkit.rest import FullRepository, Language
 from pydantic import BaseModel, ConfigDict, field_serializer
 
 
@@ -19,6 +19,7 @@ class RepositoryContext(BaseModel):
     pin_index: int | None
     repo: FullRepository
     readme: str | None
+    languages: dict[str, int] | None
 
 
 class Outcome(BaseModel):
@@ -44,6 +45,7 @@ class ProjectInfo(BaseModel):
     start_on: date
     end_on: date
     topics: list[str]
+    languages: list[str]
 
 
 class Info(BaseModel):

@@ -3,7 +3,7 @@ from enum import StrEnum, auto
 from typing import Any, Self
 
 from githubkit.exception import RequestFailed
-from githubkit.rest import FullRepository, Language
+from githubkit.rest import FullRepository
 from pydantic import BaseModel, ConfigDict, field_serializer
 
 
@@ -39,7 +39,7 @@ class ProjectInfo(BaseModel):
     name: str
     title: str | None
     source_url: str
-    live_url: str | None
+    demo_url: str | None
     description: str | None
     priority: int | None
     start_on: date

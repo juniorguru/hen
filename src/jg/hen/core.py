@@ -14,6 +14,7 @@ from jg.hen.signals import (
     on_avatar_response,
     on_profile,
     on_repo,
+    on_repo_demo,
     on_repos,
     on_social_accounts,
     send,
@@ -82,6 +83,8 @@ async def check_profile_url(
 
             readme = None
             languages = None
+            demo_response = None
+
             if pin_index is not None or not repo.archived:
                 logger.debug(f"Fetching README for {repo_slug}")
                 try:
@@ -100,6 +103,12 @@ async def check_profile_url(
                     repo_owner, repo_name
                 )
                 languages = (await process_response(response)).model_dump()
+
+                if homepage_url := repo.homepage:
+                    logger.debug(f"Fetching homepage for {repo_slug}: {homepage_url}")
+                    demo_response = await http.get(
+                        homepage_url, follow_redirects=True, timeout=3.0
+                    )
             else:
                 # For efficiency, ignore downloading additional details
                 # for archived repos which are not pinned
@@ -113,6 +122,13 @@ async def check_profile_url(
             )
             results.extend(await send(on_repo, context=context))
             contexts.append(context)
+
+            if demo_response is not None:
+                results.extend(
+                    await send(
+                        on_repo_demo, demo_response=demo_response, context=context
+                    )
+                )
         results.extend(await send(on_repos, contexts=contexts))
     except Exception as error:
         if raise_on_error:

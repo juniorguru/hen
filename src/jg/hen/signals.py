@@ -14,6 +14,7 @@ on_profile = blinker.Signal()
 on_avatar_response = blinker.Signal()
 on_social_accounts = blinker.Signal()
 on_repo = blinker.Signal()
+on_repo_demo = blinker.Signal()
 on_repos = blinker.Signal()
 
 

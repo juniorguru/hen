@@ -16,7 +16,7 @@ async def projects(contexts: list[RepositoryContext]) -> list[dict[str, Any]]:
                 "name": context.repo.full_name,
                 "title": parsed_readme["title"],
                 "source_url": context.repo.html_url,
-                "live_url": context.repo.homepage or None,
+                "demo_url": context.repo.homepage or None,
                 "description": context.repo.description,
                 "priority": context.pin_index,
                 "start_on": context.repo.created_at.date(),

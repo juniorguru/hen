@@ -33,6 +33,7 @@ def create_data_recorder(data_dir: Path) -> DataRecorder:
         path = data_dir / f"{slug}.{hash}.json"
         logger.info(f"Recording {key!r} to '.data/{path.name}'")
         path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+        logger.debug(f"Recorded {key!r} to '.data/{path.name}'")
 
     async def record_data(key: str, data: Any) -> None:
         await asyncio.to_thread(_record_data, key, data)

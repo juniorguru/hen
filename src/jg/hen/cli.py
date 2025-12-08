@@ -21,7 +21,7 @@ from jg.hen.models import Summary
 )
 @click.option(
     "--data-dir",
-    default=Path(__file__).parent.parent.parent / ".data",
+    default=Path(__file__).parent.parent.parent.parent / ".data",
     type=click.Path(file_okay=False, path_type=Path),
     help="Directory to store recorded data.",
 )

@@ -83,7 +83,7 @@ async def check_profile_url(
 
             readme = None
             languages = None
-            demo_response = None
+            demo_result = None
 
             if pin_index is not None or not repo.archived:
                 logger.debug(f"Fetching README for {repo_slug}")
@@ -106,9 +106,12 @@ async def check_profile_url(
 
                 if homepage_url := repo.homepage:
                     logger.debug(f"Fetching homepage for {repo_slug}: {homepage_url}")
-                    demo_response = await http.get(
-                        homepage_url, follow_redirects=True, timeout=3.0
-                    )
+                    try:
+                        demo_result = await http.get(
+                            homepage_url, follow_redirects=True, timeout=10.0
+                        )
+                    except Exception as e:
+                        demo_result = e
             else:
                 # For efficiency, ignore downloading additional details
                 # for archived repos which are not pinned
@@ -123,11 +126,9 @@ async def check_profile_url(
             results.extend(await send(on_repo, context=context))
             contexts.append(context)
 
-            if demo_response is not None:
+            if demo_result is not None:
                 results.extend(
-                    await send(
-                        on_repo_demo, demo_response=demo_response, context=context
-                    )
+                    await send(on_repo_demo, demo_result=demo_result, context=context)
                 )
         results.extend(await send(on_repos, contexts=contexts))
     except Exception as error:

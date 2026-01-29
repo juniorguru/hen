@@ -1,7 +1,4 @@
-import re
-
-from lxml import html
-
+from jg.hen.lib import extract_image_urls
 from jg.hen.models import RepositoryContext, Status
 from jg.hen.signals import RuleResult, on_repo, rule
 
@@ -12,13 +9,7 @@ async def has_pinned_repo_with_images(context: RepositoryContext) -> RuleResult 
         return None
     if not context.readme:
         return None
-    html_tree = html.fromstring(context.readme)
-    if len(html_tree.cssselect("img")) > 0:
-        return (
-            Status.DONE,
-            f"README připnutého repozitáře {context.repo.html_url} obsahuje obrázky.",
-        )
-    if re.search(r"!\[[^\]]+\]\([^\)]+\)", context.readme):
+    if extract_image_urls(context.readme):
         return (
             Status.DONE,
             f"README připnutého repozitáře {context.repo.html_url} obsahuje obrázky.",

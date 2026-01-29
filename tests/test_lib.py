@@ -1,11 +1,14 @@
 from pathlib import Path
 
+import pytest
+
 from jg.hen.lib import extract_image_urls
 
 
-def test_extract_image_urls_html_fixture(fixtures_dir: Path):
+@pytest.mark.asyncio
+async def test_extract_image_urls_html_fixture(fixtures_dir: Path):
     readme = (fixtures_dir / "html-img-readme.md").read_text()
-    urls = extract_image_urls(readme)
+    urls = await extract_image_urls(readme)
 
     assert urls == [
         "https://github.com/PavlaBerankova/kulturmapa/assets/107038196/353c0018-cdf6-48f7-befa-ead8fe27ec6f",
@@ -20,9 +23,10 @@ def test_extract_image_urls_html_fixture(fixtures_dir: Path):
     ]
 
 
-def test_extract_image_urls_markdown_fixture(fixtures_dir: Path):
+@pytest.mark.asyncio
+async def test_extract_image_urls_markdown_fixture(fixtures_dir: Path):
     readme = (fixtures_dir / "markdown-img-readme.md").read_text()
-    urls = extract_image_urls(readme)
+    urls = await extract_image_urls(readme)
 
     assert urls == [
         "https://user-images.githubusercontent.com/110200002/228265914-4da84468-6479-4ae8-8a82-157b1751f5b4.jpg",
@@ -33,9 +37,10 @@ def test_extract_image_urls_markdown_fixture(fixtures_dir: Path):
     ]
 
 
-def test_extract_image_urls_mixed_fixture(fixtures_dir: Path):
+@pytest.mark.asyncio
+async def test_extract_image_urls_mixed_fixture(fixtures_dir: Path):
     readme = (fixtures_dir / "mixed-img-readme.md").read_text()
-    urls = extract_image_urls(readme)
+    urls = await extract_image_urls(readme)
 
     assert urls == [
         "https://example.com/assets/html-image.png",

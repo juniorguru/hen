@@ -9,7 +9,7 @@ async def has_pinned_repo_with_images(context: RepositoryContext) -> RuleResult 
         return None
     if not context.readme:
         return None
-    if extract_image_urls(context.readme):
+    if await extract_image_urls(context.readme):
         return (
             Status.DONE,
             f"README připnutého repozitáře {context.repo.html_url} obsahuje obrázky.",

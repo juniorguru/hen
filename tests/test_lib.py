@@ -31,3 +31,14 @@ def test_extract_image_urls_markdown_fixture(fixtures_dir: Path):
         "https://user-images.githubusercontent.com/110200002/228266107-6b022756-f009-4d23-9e0d-830ab6fe9414.png",
         "https://user-images.githubusercontent.com/110200002/228266118-90218f2d-f340-4232-8ad1-57d1dd89b5c4.png",
     ]
+
+
+def test_extract_image_urls_mixed_fixture(fixtures_dir: Path):
+    readme = (fixtures_dir / "mixed-img-readme.md").read_text()
+    urls = extract_image_urls(readme)
+
+    assert urls == [
+        "https://example.com/assets/html-image.png",
+        "https://example.com/assets/another-html-image.png",
+        "https://example.com/assets/markdown-image.png",
+    ]

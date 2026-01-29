@@ -1,18 +1,14 @@
 import re
 
-from lxml import html
-from lxml.etree import ParserError
+from bs4 import BeautifulSoup
 
 
-def extract_image_urls(readme: str) -> list[str]:
+RE_IMG_MARKDOWN = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
+
+
+def extract_image_urls(markup: str) -> list[str]:
     urls = []
-    try:
-        html_tree = html.fragment_fromstring(readme, create_parent=True)
-    except (ParserError, TypeError):
-        html_tree = None
-    if html_tree is not None:
-        urls.extend(
-            src for img in html_tree.cssselect("img") if (src := img.get("src"))
-        )
-    urls.extend(match.group(1) for match in re.finditer(r"!\[[^\]]*\]\(([^)]+)\)", readme))
+    soup = BeautifulSoup(markup, "html.parser")
+    urls.extend(str(src) for img in soup.find_all("img") if (src := img.get("src")))
+    urls.extend(match.group(1) for match in RE_IMG_MARKDOWN.finditer(markup))
     return urls

@@ -1,6 +1,6 @@
 from typing import Any
 
-from lxml import html
+from bs4 import BeautifulSoup
 
 from jg.hen.models import RepositoryContext
 from jg.hen.signals import insight, on_repos
@@ -33,9 +33,7 @@ async def projects(contexts: list[RepositoryContext]) -> list[dict[str, Any]]:
 def parse_readme(readme: str | None) -> dict[str, Any | None]:
     if not readme:
         return dict(title=None)
-    html_tree = html.fromstring(readme)
-    try:
-        title = html_tree.cssselect("h1, h2")[0].text_content().strip()
-    except IndexError:
-        title = None
+    soup = BeautifulSoup(readme, "html.parser")
+    heading = soup.find(["h1", "h2"])
+    title = heading.get_text(strip=True) if heading else None
     return dict(title=title)

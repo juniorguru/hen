@@ -46,6 +46,7 @@ class ProjectInfo(BaseModel):
     end_on: date
     topics: list[str]
     languages: list[str]
+    image_urls: list[str] = []
 
 
 class Info(BaseModel):

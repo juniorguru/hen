@@ -1,5 +1,5 @@
-from jg.hen.lib import extract_image_urls
 from jg.hen.models import RepositoryContext, Status
+from jg.hen.readme import extract_image_urls
 from jg.hen.signals import RuleResult, on_repo, rule
 
 

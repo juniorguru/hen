@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from jg.hen.lib import extract_image_urls
+from jg.hen.readme import extract_image_urls
 
 
 @pytest.mark.asyncio

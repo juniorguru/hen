@@ -3,6 +3,7 @@ from typing import Any
 from bs4 import BeautifulSoup
 
 from jg.hen.models import RepositoryContext
+from jg.hen.readme import extract_image_urls, extract_title
 from jg.hen.signals import insight, on_repos
 
 
@@ -10,11 +11,10 @@ from jg.hen.signals import insight, on_repos
 async def projects(contexts: list[RepositoryContext]) -> list[dict[str, Any]]:
     projects = []
     for context in contexts:
-        parsed_readme = parse_readme(context.readme)
         projects.append(
             {
                 "name": context.repo.full_name,
-                "title": parsed_readme["title"],
+                "title": await extract_title(context.readme),
                 "source_url": context.repo.html_url,
                 "demo_url": context.repo.homepage or None,
                 "description": context.repo.description,
@@ -25,15 +25,7 @@ async def projects(contexts: list[RepositoryContext]) -> list[dict[str, Any]]:
                 "languages": (
                     list(context.languages.keys()) if context.languages else []
                 ),
+                "image_urls": await extract_image_urls(context.readme),
             }
         )
     return projects
-
-
-def parse_readme(readme: str | None) -> dict[str, Any | None]:
-    if not readme:
-        return dict(title=None)
-    soup = BeautifulSoup(readme, "html.parser")
-    heading = soup.find(["h1", "h2"])
-    title = heading.get_text(strip=True) if heading else None
-    return dict(title=title)

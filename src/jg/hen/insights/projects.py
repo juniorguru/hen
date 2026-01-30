@@ -23,7 +23,7 @@ async def projects(contexts: list[RepositoryContext]) -> list[dict[str, Any]]:
                 "languages": (
                     list(context.languages.keys()) if context.languages else []
                 ),
-                "image_urls": await extract_image_urls(context.readme),
+                "readme_image_urls": await extract_image_urls(context.readme),
             }
         )
     return projects

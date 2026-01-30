@@ -29,5 +29,10 @@ def repo(fixtures_dir: Path) -> FullRepository:
 @pytest.fixture
 def context(repo: FullRepository) -> RepositoryContext:
     return RepositoryContext(
-        username="user", pin_index=None, repo=repo, readme=None, languages=None
+        username="user",
+        pin_index=None,
+        repo=repo,
+        demo_url=None,
+        readme=None,
+        languages=None,
     )

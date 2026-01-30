@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from jg.hen.readme import extract_image_urls
+from jg.hen.readme import extract_image_urls, extract_title
 
 
 @pytest.mark.asyncio
@@ -21,3 +21,24 @@ async def test_extract_image_urls_html_fixture(fixtures_dir: Path):
         "https://github.com/PavlaBerankova/kulturmapa/assets/107038196/ebbdaa95-d931-446a-80f0-36ea3fa423b8",
         "https://github.com/PavlaBerankova/kulturmapa/assets/107038196/d305a00f-441c-4980-a83f-7863b3d48333",
     ]
+
+
+@pytest.mark.asyncio
+async def test_extract_title_returns_none_for_missing_heading():
+    assert await extract_title(None) is None
+    assert await extract_title("") is None
+    assert await extract_title("<p>No heading here</p>") is None
+
+
+@pytest.mark.asyncio
+async def test_extract_title_reads_primary_heading():
+    readme = "<article><h1>  My Project </h1><p>Welcome</p></article>"
+
+    assert await extract_title(readme) == "My Project"
+
+
+@pytest.mark.asyncio
+async def test_extract_title_falls_back_to_secondary_heading():
+    readme = "<section><h2>Secondary</h2><h1>Primary</h1></section>"
+
+    assert await extract_title(readme) == "Secondary"

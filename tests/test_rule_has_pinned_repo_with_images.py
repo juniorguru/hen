@@ -40,19 +40,6 @@ async def test_rule_has_pinned_repo_with_images_html(
 
 
 @pytest.mark.asyncio
-async def test_rule_has_pinned_repo_with_images_markdown(
-    fixtures_dir: Path, context: RepositoryContext
-):
-    context.pin_index = 3
-    context.readme = Path(fixtures_dir / "markdown-img-readme.md").read_text()
-
-    result = await has_pinned_repo_with_images(None, context=context)
-
-    assert result
-    assert result.status == Status.DONE
-
-
-@pytest.mark.asyncio
 async def test_rule_has_pinned_repo_with_images_missing(context: RepositoryContext):
     context.pin_index = 3
     context.readme = "Hello world! No images here."

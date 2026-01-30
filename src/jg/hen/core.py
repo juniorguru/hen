@@ -116,10 +116,12 @@ async def check_profile_url(
                 # For efficiency, ignore downloading additional details
                 # for archived repos which are not pinned
                 logger.debug(f"Skipping fetching additional details for {repo_slug}")
+
             context = RepositoryContext(
                 username=username,
                 pin_index=pin_index,
                 repo=repo,
+                demo_url=get_demo_url(demo_result),
                 readme=readme,
                 languages=languages,
             )
@@ -150,3 +152,15 @@ def get_pin_index(repo_slug: str, pins_index: list[str]) -> int | None:
         return pins_index.index(repo_slug)
     except ValueError:
         return None
+
+
+def get_demo_url(result: httpx.Response | Exception | None) -> str | None:
+    if not result:
+        return None
+    if isinstance(result, Exception):
+        return None
+    try:
+        result.raise_for_status()
+    except httpx.HTTPStatusError:
+        return None
+    return str(result.url)

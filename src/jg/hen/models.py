@@ -18,6 +18,7 @@ class RepositoryContext(BaseModel):
     username: str
     pin_index: int | None
     repo: FullRepository
+    demo_url: str | None
     readme: str | None
     languages: dict[str, int] | None
 

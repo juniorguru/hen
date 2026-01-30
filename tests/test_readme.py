@@ -24,6 +24,22 @@ async def test_extract_image_urls_html_fixture(fixtures_dir: Path):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "markup,expected",
+    [
+        ("<img alt='logo'>", []),
+        ("<img src='' alt='empty'>", []),
+        (None, []),
+        ("", []),
+    ],
+)
+async def test_extract_image_urls_handles_missing_sources(
+    markup: str | None, expected: list[str]
+):
+    assert await extract_image_urls(markup) == expected
+
+
+@pytest.mark.asyncio
 async def test_extract_title_returns_none_for_missing_heading():
     assert await extract_title(None) is None
     assert await extract_title("") is None

@@ -1,6 +1,5 @@
 from typing import Any
 
-
 from jg.hen.models import RepositoryContext
 from jg.hen.readme import extract_image_urls, extract_title
 from jg.hen.signals import insight, on_repos

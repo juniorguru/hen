@@ -22,11 +22,4 @@ def make_urls_absolute(
     urls: list[str], repo_owner: str, repo_name: str, branch: str
 ) -> list[str]:
     raw_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{branch}/"
-    return [_make_url_absolute(url, raw_url) for url in urls]
-
-
-def _make_url_absolute(url: str, base_url: str) -> str:
-    if urlparse(url).scheme:
-        return url
-    url = url[2:] if url.startswith("./") else url
-    return urljoin(base_url, url)
+    return [url if urlparse(url).scheme else urljoin(raw_url, url) for url in urls]

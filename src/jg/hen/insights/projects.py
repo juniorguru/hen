@@ -1,7 +1,7 @@
 from typing import Any
 
 from jg.hen.models import RepositoryContext
-from jg.hen.readme import extract_image_urls, extract_title
+from jg.hen.readme import extract_image_urls, extract_title, make_urls_absolute
 from jg.hen.signals import insight, on_repos
 
 
@@ -23,7 +23,12 @@ async def projects(contexts: list[RepositoryContext]) -> list[dict[str, Any]]:
                 "languages": (
                     list(context.languages.keys()) if context.languages else []
                 ),
-                "readme_image_urls": await extract_image_urls(context.readme),
+                "readme_image_urls": make_urls_absolute(
+                    await extract_image_urls(context.readme),
+                    context.repo.owner.login,
+                    context.repo.name,
+                    context.repo.default_branch,
+                ),
             }
         )
     return projects

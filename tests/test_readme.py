@@ -2,12 +2,12 @@ from pathlib import Path
 
 import pytest
 
-from jg.hen.readme import extract_image_urls, extract_title
+from jg.hen.readme import extract_image_urls, extract_title, make_urls_absolute
 
 
 @pytest.mark.asyncio
 async def test_extract_image_urls_html_fixture(fixtures_dir: Path):
-    readme = (fixtures_dir / "html-img-readme.md").read_text()
+    readme = (fixtures_dir / "readme-html-img.md").read_text()
     urls = await extract_image_urls(readme)
 
     assert urls == [
@@ -24,8 +24,21 @@ async def test_extract_image_urls_html_fixture(fixtures_dir: Path):
 
 
 @pytest.mark.asyncio
+async def test_extract_image_urls_relative(fixtures_dir: Path):
+    readme = (fixtures_dir / "readme-relative-link.md").read_text()
+    urls = await extract_image_urls(readme)
+
+    assert urls == [
+        "./public/img/mockup.png",
+        "https://camo.githubusercontent.com/c31126fcb6f4cb77220a3916a05cfaf4a86500593794dbdc2c7a6746c7f70249/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f52656163742d31382e332e312d3631444146423f6c6f676f3d7265616374",
+        "https://camo.githubusercontent.com/d624bbb16055b6e962f0bc6e9a44bbf96343f3a6999eba9ab0fea22a3c77eee4/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f566974652d362e302e332d3634364346463f6c6f676f3d76697465",
+        "https://camo.githubusercontent.com/5caa455d8debc46fb23abbadb45a733a937f3910a73fc875c2f7820468e1bb54/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f4c6963656e73652d4d49542d677265656e",
+    ]
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "markup,expected",
+    "markup, expected",
     [
         ("<img alt='logo'>", []),
         ("<img src='' alt='empty'>", []),
@@ -58,3 +71,38 @@ async def test_extract_title_falls_back_to_secondary_heading():
     readme = "<section><h2>Secondary</h2><h1>Primary</h1></section>"
 
     assert await extract_title(readme) == "Secondary"
+
+
+@pytest.mark.parametrize(
+    "urls, expected",
+    [
+        ([], []),
+        (
+            ["https://example.com/pic3.png"],
+            ["https://example.com/pic3.png"],
+        ),
+        (
+            ["./public/img/mockup.png"],
+            ["https://raw.githubusercontent.com/user/repo/main/public/img/mockup.png"],
+        ),
+        (
+            ["modern-browser-mockup.png"],
+            [
+                "https://raw.githubusercontent.com/user/repo/main/modern-browser-mockup.png"
+            ],
+        ),
+        (
+            ["Nu,_pogodi!_logo.png"],
+            ["https://raw.githubusercontent.com/user/repo/main/Nu,_pogodi!_logo.png"],
+        ),
+        (
+            ["docs/bottom-keyboard-clone.png"],
+            [
+                "https://raw.githubusercontent.com/user/repo/main/docs/bottom-keyboard-clone.png"
+            ],
+        ),
+    ],
+)
+def test_make_urls_absolute(urls: list[str], expected: list[str]):
+    absolute_urls = make_urls_absolute(urls, "user", "repo", "main")
+    assert absolute_urls == expected

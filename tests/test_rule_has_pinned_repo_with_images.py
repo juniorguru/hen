@@ -31,7 +31,7 @@ async def test_rule_has_pinned_repo_with_images_html(
     fixtures_dir: Path, context: RepositoryContext
 ):
     context.pin_index = 3
-    context.readme = Path(fixtures_dir / "html-img-readme.md").read_text()
+    context.readme = Path(fixtures_dir / "readme-html-img.md").read_text()
 
     result = await has_pinned_repo_with_images(None, context=context)
 

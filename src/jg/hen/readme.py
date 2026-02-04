@@ -14,7 +14,7 @@ async def extract_title(readme: str | None) -> str | None:
     if not readme:
         return None
     soup = BeautifulSoup(readme, "html.parser")
-    heading = soup.find(["h1", "h2"])
+    heading = soup.find("h1")
     return heading.get_text(strip=True) if heading else None
 
 

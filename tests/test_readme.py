@@ -67,10 +67,17 @@ async def test_extract_title_reads_primary_heading():
 
 
 @pytest.mark.asyncio
-async def test_extract_title_falls_back_to_secondary_heading():
+async def test_extract_title_only_uses_h1_not_h2():
     readme = "<section><h2>Secondary</h2><h1>Primary</h1></section>"
 
-    assert await extract_title(readme) == "Secondary"
+    assert await extract_title(readme) == "Primary"
+
+
+@pytest.mark.asyncio
+async def test_extract_title_ignores_h2_only():
+    readme = "<section><h2>Only Secondary</h2><p>Some content</p></section>"
+
+    assert await extract_title(readme) is None
 
 
 @pytest.mark.parametrize(

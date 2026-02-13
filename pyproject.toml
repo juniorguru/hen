@@ -28,7 +28,7 @@ hen = "jg.hen.cli:main"
 dev = [
     "pytest>=8.4.2",
     "pytest-ruff>=0.5",
-    "ruff>=0.14.0,<0.15.0",
+    "ruff>=0.14.0,<0.16.0",
     "cookiecutter>=2.6.0",
     "pytest-asyncio>=1.2.0",
 ]
@@ -50,7 +50,7 @@ combine-as-imports = true
 lines-after-imports = 2
 
 [build-system]
-requires = ["uv_build>=0.8.11,<0.10.0"]
+requires = ["uv_build>=0.8.11,<0.11.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]

@@ -81,6 +81,12 @@ async def check_profile_url(
             repo = await process_response(response)
             pin_index = get_pin_index(repo_slug, pins_index)
 
+            if is_external_repo(repo_owner, username):
+                logger.info(f"External repository: {repo_slug}")
+                if pin_index is None:
+                    raise ValueError(f"External repository {repo_slug} not pinned")
+                continue
+
             readme = None
             languages = None
             demo_result = None
@@ -152,6 +158,10 @@ def get_pin_index(repo_slug: str, pins_index: list[str]) -> int | None:
         return pins_index.index(repo_slug)
     except ValueError:
         return None
+
+
+def is_external_repo(repo_owner: str, username: str) -> bool:
+    return repo_owner.lower() != username.lower()
 
 
 def get_demo_url(result: httpx.Response | Exception | None) -> str | None:

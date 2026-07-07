@@ -12,10 +12,9 @@ def no_backoff():
     stamina.set_testing(False)
 
 
-TransportWithRequests = tuple[httpx.MockTransport, list[httpx.Request]]
-
-
-def responses_transport(*status_codes: int) -> TransportWithRequests:
+def responses_transport(
+    *status_codes: int,
+) -> tuple[httpx.MockTransport, list[httpx.Request]]:
     codes = iter(status_codes)
     requests = []
 

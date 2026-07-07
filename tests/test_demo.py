@@ -2,7 +2,7 @@ import httpx
 import pytest
 import stamina
 
-from jg.hen.core import fetch_demo
+from jg.hen.lib.demo import fetch_demo
 
 
 @pytest.fixture(autouse=True)

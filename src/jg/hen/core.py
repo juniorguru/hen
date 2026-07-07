@@ -167,7 +167,7 @@ def is_demo_server_error(exc: BaseException) -> bool:
 @stamina.retry(on=is_demo_server_error, attempts=3)
 async def _fetch_demo(http: httpx.AsyncClient, homepage_url: str) -> httpx.Response:
     response = await http.get(homepage_url, follow_redirects=True, timeout=10.0)
-    response.raise_for_status()
+    response.raise_for_status()  # this must happen to trigger stamina retries
     return response
 
 

@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Callable, Coroutine
 
-import httpx
+import httpx2
 from githubkit import GitHub
 
 
@@ -26,7 +26,7 @@ def with_http(fn: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
         if kwargs.get("http", None):
             return await fn(*args, **kwargs)
         else:
-            async with httpx.AsyncClient(
+            async with httpx2.AsyncClient(
                 follow_redirects=True, headers={"User-Agent": USER_AGENT}
             ) as client:
                 return await fn(*args, http=client, **kwargs)

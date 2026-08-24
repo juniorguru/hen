@@ -1,6 +1,6 @@
 from io import BytesIO
 
-import httpx
+import httpx2
 from PIL import Image
 
 from jg.hen.models import Status
@@ -14,10 +14,10 @@ IDENTICON_GREY = (240, 240, 240)
     on_avatar_response,
     "https://junior.guru/handbook/github-profile/#nastav-si-vlastni-obrazek",
 )
-async def has_avatar(avatar_response: httpx.Response) -> RuleResult:
+async def has_avatar(avatar_response: httpx2.Response) -> RuleResult:
     try:
         avatar_response.raise_for_status()
-    except httpx.HTTPStatusError as e:
+    except httpx2.HTTPStatusError as e:
         raise RuntimeError(f"Failed to fetch avatar: {e}") from e
 
     with Image.open(BytesIO(avatar_response.content)) as image:

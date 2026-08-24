@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from urllib.parse import urlparse
 
-import httpx
+import httpx2
 from githubkit import GitHub
 from githubkit.exception import RequestFailed
 
@@ -33,7 +33,7 @@ logger = logging.getLogger("jg.hen.core")
 async def check_profile_url(
     profile_url: str,
     github: GitHub,
-    http: httpx.AsyncClient,
+    http: httpx2.AsyncClient,
     raise_on_error: bool = False,
     record_data: DataRecorder | None = None,
 ) -> Summary:

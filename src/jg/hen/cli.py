@@ -34,7 +34,8 @@ def main(
     github_api_key: str | None = None,
 ):
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
-    logging.getLogger("httpcore").setLevel(logging.WARNING)
+    for logger_name in ["httpcore", "httpcore2"]:
+        logging.getLogger(logger_name).setLevel(logging.WARNING)
 
     if record_data:
         flush_dir(data_dir)

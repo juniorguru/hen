@@ -6,6 +6,15 @@ def is_demo_server_error(exc: BaseException) -> bool:
     return isinstance(exc, httpx2.HTTPStatusError) and exc.response.status_code >= 500
 
 
+def is_demo_blocked(response: httpx2.Response) -> bool:
+    if response.status_code == 429:
+        return True
+    return (
+        response.status_code == 403
+        and response.headers.get("server", "").lower() == "cloudflare"
+    )
+
+
 @stamina.retry(on=is_demo_server_error, attempts=3)
 async def _fetch_demo(http: httpx2.AsyncClient, homepage_url: str) -> httpx2.Response:
     response = await http.get(homepage_url, follow_redirects=True, timeout=10.0)

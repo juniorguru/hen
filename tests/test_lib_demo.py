@@ -2,7 +2,12 @@ import httpx2
 import pytest
 import stamina
 
-from jg.hen.lib.demo import fetch_demo, get_demo_url, is_demo_server_error
+from jg.hen.lib.demo import (
+    fetch_demo,
+    get_demo_url,
+    is_demo_blocked,
+    is_demo_server_error,
+)
 
 
 def status_error(status_code: int) -> httpx2.HTTPStatusError:
@@ -134,3 +139,20 @@ def test_get_demo_url_returns_none(result: httpx2.Response | Exception | None):
 def test_get_demo_url_returns_url_for_success(status_code: int):
     result = response(status_code, "https://demo.example.com")
     assert get_demo_url(result) == "https://demo.example.com"
+
+
+@pytest.mark.parametrize(
+    "status_code, headers, expected",
+    [
+        pytest.param(403, {"Server": "cloudflare"}, True, id="403-cloudflare"),
+        pytest.param(429, {}, True, id="429-rate-limited"),
+        pytest.param(403, {"Server": "nginx"}, False, id="403-other-server"),
+        pytest.param(404, {"Server": "cloudflare"}, False, id="404-cloudflare"),
+        pytest.param(200, {"Server": "cloudflare"}, False, id="200-cloudflare"),
+    ],
+)
+def test_is_demo_blocked(status_code: int, headers: dict[str, str], expected: bool):
+    request = httpx2.Request("GET", "https://example.com")
+    response = httpx2.Response(status_code, headers=headers, request=request)
+
+    assert is_demo_blocked(response) is expected

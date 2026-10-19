@@ -20,7 +20,7 @@ async def has_pinned_repo_with_working_demo(
     if is_demo_blocked(demo_result):
         return (
             Status.WARNING,
-            f"Repozitář {context.repo.html_url} má ukázku na adrese {demo_result.url}, ale ta blokuje automatické návštěvy (HTTP {demo_result.status_code}), takže nejde ověřit, jestli funguje.",
+            f"Repozitář {context.repo.html_url} má ukázku na adrese {demo_result.url}, ale ta blokuje moji kontrolu (HTTP {demo_result.status_code}), takže nejde ověřit, jestli funguje.",
         )
     try:
         demo_result.raise_for_status()

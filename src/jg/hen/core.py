@@ -86,6 +86,17 @@ async def check_profile_url(
                 logger.info(f"External repository: {repo_slug}")
                 if pin_index is None:
                     raise ValueError(f"External repository {repo_slug} not pinned")
+                contexts.append(
+                    RepositoryContext(
+                        username=username,
+                        pin_index=pin_index,
+                        repo=repo,
+                        demo_url=None,
+                        readme=None,
+                        languages=None,
+                        is_external=True,
+                    )
+                )
                 continue
 
             readme = None

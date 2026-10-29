@@ -21,6 +21,8 @@ class RepositoryContext(BaseModel):
     demo_url: str | None
     readme: str | None
     languages: dict[str, int] | None
+    # Skip in on_repos receivers about own work: no readme, languages or demo
+    is_external: bool = False
 
 
 class Outcome(BaseModel):
@@ -50,6 +52,14 @@ class ProjectInfo(BaseModel):
     readme_image_urls: list[str] = []
 
 
+class ContributionInfo(BaseModel):
+    name: str
+    source_url: str
+    description: str | None
+    priority: int
+    stars: int
+
+
 class Info(BaseModel):
     name: str | None
     bio: str | None
@@ -58,6 +68,7 @@ class Info(BaseModel):
     linkedin_url: str | None
     avatar_url: str
     projects: list[ProjectInfo] = []
+    contributions: list[ContributionInfo] = []
 
 
 class Summary(BaseModel):

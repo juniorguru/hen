@@ -9,6 +9,8 @@ from jg.hen.signals import insight, on_repos
 async def projects(contexts: list[RepositoryContext]) -> list[dict[str, Any]]:
     projects = []
     for context in contexts:
+        if context.is_external:
+            continue
         projects.append(
             {
                 "name": context.repo.full_name,

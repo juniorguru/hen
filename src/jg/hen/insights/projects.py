@@ -6,7 +6,9 @@ from jg.hen.signals import insight, on_repos
 
 
 @insight(on_repos)
-async def projects(contexts: list[RepositoryContext]) -> list[dict[str, Any]]:
+async def projects(
+    contexts: list[RepositoryContext], external_contexts: list[RepositoryContext]
+) -> list[dict[str, Any]]:
     projects = []
     for context in contexts:
         projects.append(

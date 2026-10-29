@@ -6,7 +6,9 @@ from jg.hen.signals import RuleResult, on_repos, rule
     on_repos,
     "https://junior.guru/handbook/github-profile/#profilove-readme",
 )
-async def has_profile_readme(contexts: list[RepositoryContext]) -> RuleResult:
+async def has_profile_readme(
+    contexts: list[RepositoryContext], external_contexts: list[RepositoryContext]
+) -> RuleResult:
     for context in contexts:
         if (
             context.repo.full_name == f"{context.username}/{context.username}"

@@ -75,6 +75,7 @@ async def check_profile_url(
             repo_slugs.append(f"{username}/{minimal_repo.name}")
 
         contexts = []
+        external_contexts = []
         for repo_slug in frozenset(repo_slugs):
             logger.debug(f"Fetching details for {repo_slug}")
             repo_owner, repo_name = repo_slug.split("/")
@@ -86,6 +87,16 @@ async def check_profile_url(
                 logger.info(f"External repository: {repo_slug}")
                 if pin_index is None:
                     raise ValueError(f"External repository {repo_slug} not pinned")
+                external_contexts.append(
+                    RepositoryContext(
+                        username=username,
+                        pin_index=pin_index,
+                        repo=repo,
+                        demo_url=None,
+                        readme=None,
+                        languages=None,
+                    )
+                )
                 continue
 
             readme = None
@@ -134,7 +145,9 @@ async def check_profile_url(
                 results.extend(
                     await send(on_repo_demo, demo_result=demo_result, context=context)
                 )
-        results.extend(await send(on_repos, contexts=contexts))
+        results.extend(
+            await send(on_repos, contexts=contexts, external_contexts=external_contexts)
+        )
     except Exception as error:
         if raise_on_error:
             raise

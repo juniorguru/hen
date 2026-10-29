@@ -21,6 +21,7 @@ class RepositoryContext(BaseModel):
     demo_url: str | None
     readme: str | None
     languages: dict[str, int] | None
+    # Skip in on_repos receivers about own work: no readme, languages or demo
     is_external: bool = False
 
 

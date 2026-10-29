@@ -1,5 +1,5 @@
 import pytest
-from githubkit.rest import PublicUser
+from githubkit_schemas.latest.models import PublicUser
 
 from jg.hen.models import Status
 from jg.hen.rules.has_email import has_email

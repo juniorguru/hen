@@ -1,4 +1,4 @@
-from githubkit.rest import PublicUser, SocialAccount
+from githubkit_schemas.latest.models import PublicUser, SocialAccount
 
 from jg.hen.models import Status
 from jg.hen.signals import RuleResult, on_social_accounts, rule

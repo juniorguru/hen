@@ -3,7 +3,7 @@ from enum import StrEnum, auto
 from typing import Any, Self
 
 from githubkit.exception import RequestFailed
-from githubkit.rest import FullRepository
+from githubkit_schemas.latest.models import FullRepository
 from pydantic import BaseModel, ConfigDict, field_serializer
 
 

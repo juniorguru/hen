@@ -1,6 +1,6 @@
 from urllib.parse import quote, urlparse, urlunparse
 
-from githubkit.rest import PublicUser, SocialAccount
+from githubkit_schemas.latest.models import PublicUser, SocialAccount
 
 from jg.hen.signals import insight, on_social_accounts
 

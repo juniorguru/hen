@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from githubkit.rest import FullRepository, PublicUser
+from githubkit_schemas.latest.models import FullRepository, PublicUser
 from pydantic import TypeAdapter
 
 from jg.hen.models import RepositoryContext

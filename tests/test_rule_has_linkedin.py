@@ -1,5 +1,5 @@
 import pytest
-from githubkit.rest import PublicUser, SocialAccount
+from githubkit_schemas.latest.models import PublicUser, SocialAccount
 from pydantic import TypeAdapter
 
 from jg.hen.models import Status

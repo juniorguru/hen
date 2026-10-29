@@ -1,4 +1,4 @@
-from githubkit.rest import PublicUser
+from githubkit_schemas.latest.models import PublicUser
 
 from jg.hen.signals import insight, on_profile
 

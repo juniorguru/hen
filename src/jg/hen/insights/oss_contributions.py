@@ -5,7 +5,7 @@ from jg.hen.signals import insight, on_repos
 
 
 @insight(on_repos)
-async def contributions(
+async def oss_contributions(
     contexts: list[RepositoryContext], external_contexts: list[RepositoryContext]
 ) -> list[dict[str, Any]]:
     return [

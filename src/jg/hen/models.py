@@ -50,7 +50,7 @@ class ProjectInfo(BaseModel):
     readme_image_urls: list[str] = []
 
 
-class ContributionInfo(BaseModel):
+class OSSContributionInfo(BaseModel):
     name: str
     source_url: str
     description: str | None
@@ -66,7 +66,7 @@ class Info(BaseModel):
     linkedin_url: str | None
     avatar_url: str
     projects: list[ProjectInfo] = []
-    contributions: list[ContributionInfo] = []
+    oss_contributions: list[OSSContributionInfo] = []
 
 
 class Summary(BaseModel):

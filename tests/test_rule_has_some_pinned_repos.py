@@ -8,7 +8,7 @@ from jg.hen.rules.has_some_pinned_repos import has_some_pinned_repos
 async def test_rule_has_some_pinned_repos_none(context: RepositoryContext):
     context.pin_index = None
 
-    result = await has_some_pinned_repos(None, contexts=[context], external_contexts=[])
+    result = await has_some_pinned_repos(None, contexts=[context])
 
     assert result
     assert result.status == Status.ERROR
@@ -18,7 +18,7 @@ async def test_rule_has_some_pinned_repos_none(context: RepositoryContext):
 async def test_rule_has_some_pinned_repos_own(context: RepositoryContext):
     context.pin_index = 0
 
-    result = await has_some_pinned_repos(None, contexts=[context], external_contexts=[])
+    result = await has_some_pinned_repos(None, contexts=[context])
 
     assert result
     assert result.status == Status.DONE
@@ -28,8 +28,9 @@ async def test_rule_has_some_pinned_repos_own(context: RepositoryContext):
 @pytest.mark.asyncio
 async def test_rule_has_some_pinned_repos_only_external(context: RepositoryContext):
     context.pin_index = 0
+    context.is_external = True
 
-    result = await has_some_pinned_repos(None, contexts=[], external_contexts=[context])
+    result = await has_some_pinned_repos(None, contexts=[context])
 
     assert result
     assert result.status == Status.DONE
@@ -41,11 +42,9 @@ async def test_rule_has_some_pinned_repos_own_and_external(
     context: RepositoryContext,
 ):
     own_context = context.model_copy(update={"pin_index": 0})
-    external_context = context.model_copy(update={"pin_index": 1})
+    external_context = context.model_copy(update={"pin_index": 1, "is_external": True})
 
-    result = await has_some_pinned_repos(
-        None, contexts=[own_context], external_contexts=[external_context]
-    )
+    result = await has_some_pinned_repos(None, contexts=[own_context, external_context])
 
     assert result
     assert result.status == Status.DONE

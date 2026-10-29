@@ -21,6 +21,7 @@ class RepositoryContext(BaseModel):
     demo_url: str | None
     readme: str | None
     languages: dict[str, int] | None
+    is_external: bool = False
 
 
 class Outcome(BaseModel):
@@ -54,7 +55,7 @@ class ContributionInfo(BaseModel):
     name: str
     source_url: str
     description: str | None
-    priority: int | None
+    priority: int
     stars: int
 
 

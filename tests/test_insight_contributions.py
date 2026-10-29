@@ -7,8 +7,9 @@ from jg.hen.models import RepositoryContext
 @pytest.mark.asyncio
 async def test_insight_contributions(context: RepositoryContext):
     context.pin_index = 2
+    context.is_external = True
 
-    result = await contributions(None, contexts=[], external_contexts=[context])
+    result = await contributions(None, contexts=[context])
 
     assert result.value == [
         {
@@ -22,7 +23,19 @@ async def test_insight_contributions(context: RepositoryContext):
 
 
 @pytest.mark.asyncio
-async def test_insight_contributions_empty(context: RepositoryContext):
-    result = await contributions(None, contexts=[context], external_contexts=[])
+async def test_insight_contributions_ignores_own_repos(context: RepositoryContext):
+    context.pin_index = 0
+
+    result = await contributions(None, contexts=[context])
 
     assert result.value == []
+
+
+@pytest.mark.asyncio
+async def test_insight_contributions_sorted_by_pin_index(context: RepositoryContext):
+    second = context.model_copy(update={"pin_index": 4, "is_external": True})
+    first = context.model_copy(update={"pin_index": 1, "is_external": True})
+
+    result = await contributions(None, contexts=[second, first])
+
+    assert [item["priority"] for item in result.value] == [1, 4]
